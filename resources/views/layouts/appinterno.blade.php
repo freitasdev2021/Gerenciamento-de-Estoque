@@ -11,9 +11,10 @@
         <!-- Core theme CSS (includes Bootstrap)-->
          <!--jQuery-->
          <link href="{{asset('css/style.css')}}" rel="stylesheet"/>
+         <link href="{{asset('css/libs/styles.css')}}" rel="stylesheet"/>
          <script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
          <!--LOAD-->
-         <link rel="stylesheet" href="{{asset('resources/css/libs/load.css')}}">
+         <link rel="stylesheet" href="{{asset('css/libs/load.css')}}">
          <link rel="stylesheet" href="{{asset('css/lateralBar.css')}}">
          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.2/css/all.min.css" integrity="sha512-1sCRPdkRXhBV2PBLUdRb4tMg1w2YPf37qatUFeS7zlBy7jJI8Lf4VHwWfZZfpXtYSLy85pkm9GaYVYMfw5BC1A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
          <!--DATATABLES-->
@@ -58,10 +59,6 @@
                         </div>
                     </div>
                 </nav>
-                <!-- Page content-->
-                <!-- <div class="logoCentral">
-                    <img src="{{asset('img/logo.png" width="500px" height="250px">
-                </div> -->
                 <div class="container-fluid conteudo">
                     @yield('content')
                 </div>
@@ -72,16 +69,16 @@
         <!-- Bootstrap core JS-->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
         <!-- Core theme JS-->
-        <script src="{{asset('js/jquery.min.js"></script>
-        <script src="{{asset('js/libs/maskmoney.js"></script>
-        <script src="{{asset('js/scripts.js"></script>
-        <script src="{{asset('js/libs/jquery.mask.js"></script>
-        <script src="{{asset('js/libs/responsive.bootstrap4.min.js"></script>
-        <script src="{{asset('js/libs/datatables.js"></script>
+        <script src="{{asset('js/jquery.min.js')}}"></script>
+        <script src="{{asset('js/libs/maskmoney.js')}}"></script>
+        <script src="{{asset('js/scripts.js')}}"></script>
+        <script src="{{asset('js/libs/jquery.mask.js')}}"></script>
+        <script src="{{asset('js/libs/responsive.bootstrap4.min.js')}}"></script>
+        <script src="{{asset('js/libs/datatables.js')}}"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js "></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
-        <script src="{{asset('js/relatoriosfil.js"></script>
+        <script src="{{asset('js/relatoriosfil.js')}}"></script>
         </div>
     </body>
 </html>
