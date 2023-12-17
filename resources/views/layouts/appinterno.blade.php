@@ -28,12 +28,12 @@
             <!-- Sidebar-->
             <div class="border-end" id="sidebar-wrapper" style="background:#234D9D;">
                 <div class="sidebar-heading text-white" style="background:#234D9D;">
-                aaaa
+                {{Auth::user()->name}}
                 </div>
                 <div class="list-group list-group-flush navegacao">
-                    <a class="list-group-item list-group-item-action p-3 produtos border-bottom white" href="" style="cursor:pointer;"><i class="fa-solid fa-shop"></i>&nbsp;Produtos</a>
-                    <a class="list-group-item list-group-item-action p-3 produtos border-bottom white" href="" style="cursor:pointer;"><i class="fa-solid fa-shop"></i>&nbsp;Produtos</a>
-                    <a class="list-group-item list-group-item-action p-3 produtos border-bottom white" href="" style="cursor:pointer;"><i class="fa-solid fa-shop"></i>&nbsp;Produtos</a>
+                    <a class="list-group-item list-group-item-action p-3 border-bottom" href="{{route('produtos.view')}}" style="cursor:pointer; {{ (Route::getCurrentRoute()->getName() == 'produtos.view') ? 'background:white; color:black' : '' }}"><i class="fa-solid fa-shop"></i>&nbsp;Produtos</a>
+                    <a class="list-group-item list-group-item-action p-3 border-bottom" href="{{route('categorias.view')}}" style="cursor:pointer; {{ (Route::getCurrentRoute()->getName() == 'categorias.view') ? 'background:white; color:black' : '' }} "><i class="fa-solid fa-list"></i>&nbsp;Categorias</a>
+                    <a class="list-group-item list-group-item-action p-3 border-bottom" href="{{route('movimentacoes.view')}}" style="cursor:pointer; {{ (Route::getCurrentRoute()->getName() == 'movimentacoes.view') ? 'background:white; color:black' : '' }} "><i class="fa-solid fa-dollar-sign"></i></i>&nbsp;Movimentações</a>
                 </div>
             </div>
             <!-- Page content wrapper-->
@@ -45,17 +45,12 @@
                         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
                         <div class="collapse navbar-collapse" id="navbarSupportedContent">
                             <ul class="navbar-nav ms-auto mt-2 mt-lg-0">
-                                <li class="nav-item active"><a class="nav-link text-white" href="">Home</a></li>
-                                <li class="nav-item dropdown">
-                                    <a class="nav-link dropdown-toggle text-white" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Usuário</a>
-                                    <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                                        <a class="dropdown-item " href="#!">Ajuda</a>
-                                        <a class="dropdown-item " href="#!">Suporte</a>
-                                        <div class="dropdown-divider"></div>
-                                        <a class="dropdown-item " href="index.php?sair">Sair</a>
-                                    </div>
-                                </li>
+                                <li class="nav-item active"><a class="nav-link text-white" href="" onclick="event.preventDefault();
+                                                     document.getElementById('logout-form').submit();">Sair</a></li>
                             </ul>
+                            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                                        @csrf
+                            </form>
                         </div>
                     </div>
                 </nav>

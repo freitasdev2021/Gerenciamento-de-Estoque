@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ProdutosController;
+use App\Http\Controllers\MovimentacoesControllerController;
+use App\Http\Controllers\CategoriasController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -18,14 +21,14 @@ Route::get('/', function () {
     return view('auth.login');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/produtos', [ProdutosController::class, 'index'])->middleware(['auth', 'verified'])->name('produtos.view');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/categorias', [CategoriasController::class, 'index'])->name('categorias.view');
+    Route::get('/movimentacoes', [CategoriasController::class, 'index'])->name('movimentacoes.view');
 });
 
 require __DIR__.'/auth.php';

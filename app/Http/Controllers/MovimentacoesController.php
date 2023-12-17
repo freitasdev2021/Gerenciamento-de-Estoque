@@ -11,9 +11,8 @@ class MovimentacoesController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-        //
+    public function index(){
+        return view('movimentacoes');
     }
 
     /**
