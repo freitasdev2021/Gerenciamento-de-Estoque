@@ -44,7 +44,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/produtos/editar/update', [ProdutosController::class, 'update'])->name('produtos.update'); //ATUALIZAR PRODUTO
     Route::post('/produtos/set', [ProdutosController::class,'set'])->name('categorias.setProduto'); //SALVAR PRODUTO
     Route::post('/produtos/delete', [ProdutosController::class,'destroy'])->name('produtos.delete'); //EXCLUIR PRODUTO
-    //
+    //RELATÓRIOS
+    Route::get('/relatorios', [MovimentacoesController::class, 'indexRel'])->name('relatorios.index'); //MOSTRAR MOVIMENTAÇÕES
+    Route::post('/relatorios/graficos', [MovimentacoesController::class, 'getRelatorio'])->name('relatorios.graficos'); //MOSTRAR MOVIMENTAÇÕES
 });
 
 require __DIR__.'/auth.php';

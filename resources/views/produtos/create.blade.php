@@ -65,7 +65,7 @@
         <div class="row col-sm-12">
             <div class="col-sm-4 input">
                 <label>Foto</label>
-                <input type="file" id="fotoProduto" name="ftprod" class="form-control" minlength="1">
+                <input type="file" id="fotoProduto" name="ftprod" class="form-control" minlength="1" accept="image/png, image/jpeg, image/jpg">
                 <div class="error-input text-danger">
                 Preenchimento incorreto!
                 </div>

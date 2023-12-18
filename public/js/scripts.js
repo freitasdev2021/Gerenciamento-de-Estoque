@@ -19,6 +19,8 @@ window.addEventListener('DOMContentLoaded', event => {
 });
 
 $(document).ready(function(){
+    //FUNÇÃO DOS GRAFICOS
+    getProdutosVendidos()
     //AÇÃO DO REGEX DATA
     $(".data input").keyup(function(){
         $(this).val(formataData($(this).val()))
@@ -71,7 +73,11 @@ $(document).ready(function(){
             // O evento onload ocorre quando um objeto he carregado
             lerArquivo.onload = function(arquivoCarregado) {
                var imagemBase64 = arquivoCarregado.target.result;  
-               $("#imagemProduto").attr("src",imagemBase64)
+               if(imagemBase64.length > 6993772){
+                alert("Não e Permitido Imagens Maiores que 5mb")
+               }else{
+                $("#imagemProduto").attr("src",imagemBase64)
+               }
             }  
     
             // O metodo readAsDataURL e usado para ler o conteudo
@@ -108,6 +114,79 @@ $(document).ready(function(){
     //EXCLUIR OS ERROS QUANDO RECARREGAR A TELA
     $(".error-input").hide()
 })
+//GERA OS GRÁFICOS
+function getProdutosVendidos(){
+    $.ajax({
+        method : "POST",
+        url    : "relatorios/graficos",
+        headers : {
+            'X-CSRF-TOKEN': $("#graficoProdutos").attr("data-csrf")
+        }
+    }).done(function(retorno){
+        trintadias = jQuery.parseJSON(retorno)
+        quantidade = [];  
+        produtos = []
+        trintadias.forEach((i)=>{
+            produtos.push(i.NMProduto)
+            quantidade.push(i.QTVenda)
+        })
+        var ctx = document.getElementById("graficoProdutos");
+        var myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: produtos,
+                
+                datasets: [{
+                    label: 'Vendas',
+                    fill:false,
+                    data: quantidade,
+                    backgroundColor: 'blue',
+                    borderWidth: 1
+                }
+              ]
+            },
+            options: {
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero:true,
+                            callback : (value,index,values) => {
+                                return value
+                            }
+                        }
+                    }]
+                },
+                title: {
+                    display: true,
+                    text: 'Top 10 Maiores Saidas'
+                },
+                responsive: true,
+                
+              tooltips: {
+                    callbacks: {
+                        labelColor: function(tooltipItem, chart) {
+                            return {
+                                borderColor: 'green',
+                                backgroundColor: 'blue'
+                            }
+                        },
+                        label : function(tooltipItem,data) {
+                            return trataValor(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index],0)
+                        }
+                    }
+                },
+                legend: {
+                    labels: {
+                        // This more specific font property overrides the global property
+                        fontColor: 'black',
+                      
+                    }
+                }
+            }
+        });  
+    })
+}
+
 //TRATA OS VALORES MONETÁRIOS
 function trataValor(valor,tratamento){
     if(tratamento == 0){
@@ -302,7 +381,7 @@ function setProduto(form){
             if($("input[name=idpro]",form).val()){
                 window.location.href=urlAtual.replace("/editar/"+$("input[name=idpro]",form).val()," ")
             }else{
-                history.back()
+                window.location.href=urlAtual.replace("/create"," ")
             }
             
         }
@@ -331,7 +410,8 @@ function setMovimentacao(form){
         var rt = jQuery.parseJSON(retorno);
         alert(rt.mensagem);
         if(rt.status){
-            window.location.reload()
+            var urlAtual = window.location.href;
+            window.location.href=urlAtual.replace("/create"," ")
         }
     })
 }
@@ -361,7 +441,11 @@ function setCategoria(form){
         alert(rt.mensagem);
         if(rt.status){
             var urlAtual = window.location.href;
-            //window.location.href=urlAtual.replace(["/editar/"+$("input[name=idcat]",form).val(),"/create"]," ")
+            if($("input[name=idcat]",form).val()){
+                window.location.href=urlAtual.replace("/editar/"+$("input[name=idcat]",form).val()," ")
+            }else{
+                window.location.href=urlAtual.replace("/create"," ")
+            }
         }
     })
 }

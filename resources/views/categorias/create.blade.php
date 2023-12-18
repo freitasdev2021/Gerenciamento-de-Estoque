@@ -19,7 +19,6 @@
             <div class="col-sm-4 input">
                 <br>
                 <button class="btn btn-success" type="submit">Enviar</button>
-                <button class="btn btn-warning" onclick="history.back()">Voltar</button>
             </div>
         </div>
     </form>

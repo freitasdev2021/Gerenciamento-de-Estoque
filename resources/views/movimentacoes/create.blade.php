@@ -10,7 +10,7 @@ use App\Http\Controllers\geralController;
         <div class="row">
             <div class="col-sm-4 input">
                 <label>Quantidade</label>
-                <input type="text" name="quantidadeProduto" class="form-control" minlength="1">
+                <input type="number" name="quantidadeProduto" class="form-control" minlength="1">
                 <div class="error-input text-danger">
                     Preenchimento incorreto!
                 </div>

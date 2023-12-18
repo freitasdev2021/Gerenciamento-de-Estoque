@@ -19,6 +19,10 @@ class MovimentacoesController extends Controller
         ]);
     }
 
+    public function indexRel(){
+        return view('relatorios.index');
+    }
+
        /**
      * Show the form for creating a new resource.
      */
@@ -26,6 +30,18 @@ class MovimentacoesController extends Controller
         return view('movimentacoes.create',[
             "estoque" => Produtos::all()
         ]);
+    }
+
+    public function getRelatorio(){
+        $REL = DB::select("SELECT NMProduto,SUM(QTMovimentacao) as QTVenda FROM movimentacoes INNER JOIN produtos ON(produtos.id = movimentacoes.IDProduto) WHERE TPMovimentacao = 'VEN' GROUP BY IDProduto ORDER BY QTMovimentacao ASC LIMIT 10");
+        $relProds = array();
+        foreach($REL as $r){
+            $relProds[] = array(
+                "NMProduto" => $r->NMProduto,
+                "QTVenda" => $r->QTVenda
+            );
+        }
+        return json_encode($relProds);
     }
 
     /**

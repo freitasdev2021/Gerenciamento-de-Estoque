@@ -16,7 +16,10 @@ use App\Http\Controllers\geralController;
                 <th>Estoque</th>
                 <th>Vencimento</th>
                 <th>Valor</th>
+                <th>Descrição</th>
                 <th>SKU</th>
+                <th>U.Edição</th>
+                <th>Cadastro</th>
                 <th>Opções</th>
             </tr>
         </thead>
@@ -27,7 +30,10 @@ use App\Http\Controllers\geralController;
                 <td>{{$p->NUEstoqueProduto}}</td>
                 <td>{{($p->DTVencimento == '0000-00-00 00:00:00' ? 'Não Tem' : geralController::data($p->DTVencimento,'d/m/Y') )}}</td>
                 <td>{{geralController::trataValor($p->VLProduto,0)}}</td>
+                <td>{{$p->DSProduto}}</td>
                 <td>{{$p->SKUProduto}}</td>
+                <td>{{geralController::data($p->DTEdicao,'d/m/Y H:i')}}</td>
+                <td>{{geralController::data($p->DTCadastro,'d/m/Y H:i')}}</td>
                 <td>
                     <button class="btn btn-danger btn-excluir-produto" data-id="{{$p->IDProduto}}" data-csrf="{{ csrf_token() }}">
                         <i class="fa-solid fa-trash"></i>
