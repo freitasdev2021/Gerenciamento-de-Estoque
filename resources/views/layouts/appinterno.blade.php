@@ -23,17 +23,16 @@
          @vite(['resources/sass/app.scss', 'resources/js/app.js'])
     </head>
     <body>
-        <div id="app">
-        <div class="d-flex" id="wrapper">
+    <div class="d-flex" id="wrapper">
             <!-- Sidebar-->
             <div class="border-end" id="sidebar-wrapper" style="background:#234D9D;">
                 <div class="sidebar-heading text-white" style="background:#234D9D;">
                 {{Auth::user()->name}}
                 </div>
                 <div class="list-group list-group-flush navegacao">
-                    <a class="list-group-item list-group-item-action p-3 border-bottom" href="{{route('produtos.view')}}" style="cursor:pointer; {{ (Route::getCurrentRoute()->getName() == 'produtos.view') ? 'background:white; color:black' : '' }}"><i class="fa-solid fa-shop"></i>&nbsp;Produtos</a>
-                    <a class="list-group-item list-group-item-action p-3 border-bottom" href="{{route('categorias.view')}}" style="cursor:pointer; {{ (Route::getCurrentRoute()->getName() == 'categorias.view') ? 'background:white; color:black' : '' }} "><i class="fa-solid fa-list"></i>&nbsp;Categorias</a>
-                    <a class="list-group-item list-group-item-action p-3 border-bottom" href="{{route('movimentacoes.view')}}" style="cursor:pointer; {{ (Route::getCurrentRoute()->getName() == 'movimentacoes.view') ? 'background:white; color:black' : '' }} "><i class="fa-solid fa-dollar-sign"></i></i>&nbsp;Movimentações</a>
+                    <a class="list-group-item list-group-item-action p-3 border-bottom" href="{{route('produtos.index')}}" style="cursor:pointer; {{ (Route::getCurrentRoute()->getName() == 'produtos.index' || Route::getCurrentRoute()->getName() == 'produtos.create' || Route::getCurrentRoute()->getName() == 'produtos.edit') ? 'background:white; color:black' : '' }}"><i class="fa-solid fa-shop"></i>&nbsp;Produtos</a>
+                    <a class="list-group-item list-group-item-action p-3 border-bottom" href="{{route('categorias.index')}}" style="cursor:pointer; {{ (Route::getCurrentRoute()->getName() == 'categorias.index' || Route::getCurrentRoute()->getName() == 'categorias.create' || Route::getCurrentRoute()->getName() == 'categorias.edit') ? 'background:white; color:black' : '' }} "><i class="fa-solid fa-list"></i>&nbsp;Categorias</a>
+                    <a class="list-group-item list-group-item-action p-3 border-bottom" href="{{route('movimentacoes.index')}}" style="cursor:pointer; {{ (Route::getCurrentRoute()->getName() == 'movimentacoes.index' || Route::getCurrentRoute()->getName() == 'movimentacoes.create' || Route::getCurrentRoute()->getName() == 'movimentacoes.edit') ? 'background:white; color:black' : '' }} "><i class="fa-solid fa-box"></i>&nbsp;Estoque</a>
                 </div>
             </div>
             <!-- Page content wrapper-->
@@ -59,8 +58,6 @@
                 </div>
                 
             </div>
-            
-        </div>
         <!-- Bootstrap core JS-->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
         <!-- Core theme JS-->
@@ -73,7 +70,6 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js "></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
-        <script src="{{asset('js/relatoriosfil.js')}}"></script>
         </div>
     </body>
 </html>

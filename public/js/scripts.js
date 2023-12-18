@@ -19,42 +19,93 @@ window.addEventListener('DOMContentLoaded', event => {
 });
 
 $(document).ready(function(){
+    //AÇÃO DO REGEX DATA
     $(".data input").keyup(function(){
         $(this).val(formataData($(this).val()))
     })
+    //AÇÃO BOTÃO DE ENVIAR FORMULARIO
+    $("#formCategorias").on("submit",function(e){
+        e.preventDefault()
+        setCategoria("#formCategorias")
+    })
+    $("#formMovimentacao").on("submit",function(e){
+        e.preventDefault()
+        setMovimentacao("#formMovimentacao")
+    })
+
+    //AÇÃO DE EXCLUSÃO
+    $(".btn-excluir-categoria").on("click",function(){
+        excluirCategoria($(this).attr("data-id"),$(this).attr("data-csrf"),0)
+    })
+    $(".btn-excluir-produto").on("click",function(){
+        if(confirm("Deseja Excluir esse Produto?")){
+            excluirProduto($(this).attr("data-id"),$(this).attr("data-csrf"))
+        }
+    })
+    $("#formProdutos").on("submit",function(e){
+        e.preventDefault()
+        setProduto("#formProdutos")
+    })
+    //HEADER DA TABELA
+    $(".tabela thead tr th").css({
+        background: '#234D9D',
+        color: 'white',
+        "text-align":"center"
+    })
+    //IMAGEM DO PRODUTO
+    $("#fotoProduto").on("change",function(){
+        // Receber o arquivo do formulario
+        var receberArquivo = document.getElementById("fotoProduto").files;
+        //console.log(receberArquivo);
     
+        // Verificar se existe o arquivo
+        if (receberArquivo.length > 0) {
+    
+            // Carregar a imagem
+            var carregarImagem = receberArquivo[0];
+            //console.log(carregarImagem);
+    
+            // FileReader - permite ler o conteudo do arquivo do computador do usuario
+            var lerArquivo = new FileReader();
+    
+            // O evento onload ocorre quando um objeto he carregado
+            lerArquivo.onload = function(arquivoCarregado) {
+               var imagemBase64 = arquivoCarregado.target.result;  
+               $("#imagemProduto").attr("src",imagemBase64)
+            }  
+    
+            // O metodo readAsDataURL e usado para ler o conteudo
+            lerArquivo.readAsDataURL(carregarImagem);
+        }
+    })
+    //DATATABLES
+    $(".tabela").DataTable({
+        "responsive": true,
+        "autoWidth": false,
+        "bDestroy": true
+    })
+    //FORNATAR VALOR MONETÁRIO
     $(".money input").maskMoney({ 
         allowNegative: false,
         thousands:'.',
         decimal:',',
         affixesStay: true
     })
-    
+    //FORMATAR TEXTO SEM CARACTERES ESPECIAIS
     $('input[type=name]').bind('input',function(){
         str = $(this).val().replace(/[^A-Za-z\u00C0-\u00FF\-\/\s]+/g,'');
         str = str.replace(/[\s{ \2 }]+/g,' ');
         if(str == " ")str = "";
         $(this).val( str );
     });
-    
+    //FORMATAR TEXTAREA SEM CARACTERES ESPECIAIS
     $('textarea').bind('textarea',function(){
         str = $(this).val().replace(/[^A-Za-z\u00C0-\u00FF\-\/\s]+/g,'');
         str = str.replace(/[\s{ \2 }]+/g,' ');
         if(str == " ")str = "";
         $(this).val( str );
     });
-
-    $('input[type=name]').bind('input',function(){
-        str = $(this).val().replace(/[^A-Za-z\u00C0-\u00FF\-\/\s]+/g,'');
-        str = str.replace(/[\s{ \2 }]+/g,' ');
-        if(str == " ")str = "";
-        $(this).val( str );
-    });
-    
-    $("input[name=cnpj]").keyup(function(){
-        $(this).val(formataCnpj($(this).val()))
-    })
-    
+    //EXCLUIR OS ERROS QUANDO RECARREGAR A TELA
     $(".error-input").hide()
 })
 //TRATA OS VALORES MONETÁRIOS
@@ -79,7 +130,7 @@ function trataValor(valor,tratamento){
         return val.replace(",",".")
     }
 }
-
+//FORMATAR DATA
 function formataData(num){
     var str = "";
     num = num.replace(/[^0-9]+/g,'');
@@ -91,7 +142,6 @@ function formataData(num){
     }
     return str;
 }
-
 //TRATA OS FORMULARIOS
 function validaCampos(form){
     var inputs = [];
@@ -173,5 +223,146 @@ function validaCampos(form){
     }
     return true
 }
-//
+//EXCLUIR CATEGORIA
+function excluirCategoria(id,csrf,confirmacao){
+    // console.log(confirmacao)
+    // return false
+    $.ajax({
+        method : "POST",
+        url : 'categorias/delete',
+        data : {
+            IDCategoria : id,
+            confirmar : confirmacao
+        },
+        headers: {
+            'X-CSRF-TOKEN': csrf
+        }
+    }).done(function(retornoCat){
+       var categoria = jQuery.parseJSON(retornoCat)
+       if(confirmacao == 0){
+        if(categoria.status){
+            if(confirm(categoria.mensagem)){
+                excluirCategoria(id,csrf,1)
+            }
+           }else{
+            alert(categoria.mensagem)
+           }
+       }else{
+        window.location.reload()
+       }
+    })
+}
+//EXCLUIR PRODUTO
+function excluirProduto(id,csrf){
+    $.ajax({
+        method : "POST",
+        url : 'produtos/delete',
+        data : {
+            IDProduto : id
+        },
+        headers: {
+            'X-CSRF-TOKEN': csrf
+        }
+    }).done(function(){
+        window.location.reload()
+    })
+}
+//ENVIAR DADOS DOS PRODUTOS
+function setProduto(form){
+    if($("input[name=idpro]",form).val()){
+        rota = "update"
+    }else{
+        rota = "set"
+    }
+    if(!validaCampos(form)){
+        return false
+    }
+    $.ajax({
+        method : "POST",
+        url    : rota,
+        data : {
+            idProduto         : $("input[name=idpro]",form).val(),
+            nomeProduto       : $("input[name=nomeProduto]",form).val(),
+            skuProduto        : $("input[name=skuProduto]",form).val(),
+            descricaoProduto  : $("textarea[name=descricaoProduto]",form).val(),
+            valorProduto      : trataValor($("input[name=valorProduto]",form).val(),1),
+            categoriaProduto  : $("select[name=categoriaProduto]",form).val(),
+            estoqueProduto    : $("input[name=estoqueProduto]",form).val(),
+            vencimentoProduto : $("input[name=vencimentoProduto]",form).val(),
+            imagemProduto     : $("#imagemProduto").attr("src")
+        },
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
+    }).done(function(retorno){
+        var rt = jQuery.parseJSON(retorno);
+        alert(rt.mensagem);
+        if(rt.status){
+            var urlAtual = window.location.href;
+            if($("input[name=idpro]",form).val()){
+                window.location.href=urlAtual.replace("/editar/"+$("input[name=idpro]",form).val()," ")
+            }else{
+                history.back()
+            }
+            
+        }
+    })
+}
+//ENVIAR DADOS DA MOVIMENTAÇÃO
+function setMovimentacao(form){
+    if(!validaCampos(form)){
+        return false
+    }
+    $.ajax({
+        method : "POST",
+        url    : 'set',
+        data : {
+            quantidadeProduto : $("input[name=quantidadeProduto]",form).val(),
+            tipoMovimentacao  : $("select[name=tipoMovimentacao]",form).val(),
+            valorMovimentacao : $("input[name=valorMovimentacao]",form).val(),
+            idProduto         : $("select[name=produtoMovimentacao]",form).val(),
+        },
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
+    }).done(function(retorno){
+        // console.log(retorno)
+        // return false
+        var rt = jQuery.parseJSON(retorno);
+        alert(rt.mensagem);
+        if(rt.status){
+            window.location.reload()
+        }
+    })
+}
+
+//ENVIAR DADOS DAS CATEGORIAS
+function setCategoria(form){
+    if($("input[name=idcat]",form).val()){
+        rota = "update"
+    }else{
+        rota = "set"
+    }
+    if(!validaCampos(form)){
+        return false
+    }
+    $.ajax({
+        method : "POST",
+        url    : rota,
+        data : {
+            idCategoria : $("input[name=idcat]",form).val(),
+            nomeCategoria : $("input[name=nomeCategoria]",form).val()
+        },
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
+    }).done(function(retorno){
+        var rt = jQuery.parseJSON(retorno);
+        alert(rt.mensagem);
+        if(rt.status){
+            var urlAtual = window.location.href;
+            //window.location.href=urlAtual.replace(["/editar/"+$("input[name=idcat]",form).val(),"/create"]," ")
+        }
+    })
+}
 

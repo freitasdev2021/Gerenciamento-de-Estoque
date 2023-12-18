@@ -16,7 +16,8 @@ class produtos extends Model{
         'DTCadastro',
         'DTVencimento',
         'DTEdicao',
-        'SKUProduto'
+        'SKUProduto',
+        'NUEstoqueProduto'
     ];
 
 }

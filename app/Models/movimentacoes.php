@@ -10,6 +10,8 @@ class movimentacoes extends Model
     use HasFactory;
     protected $fillable = [
         'IDProduto',
-        'TPMovimentacao'
+        'TPMovimentacao',
+        'VLMovimentacao',
+        'QTMovimentacao'
     ];
 }

@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             $table->integer('IDProduto');
             $table->string("TPMovimentacao",3)->nullable(false);
+            $table->float("VLMovimentacao")->nullable(false);
+            $table->integer('QTMovimentacao')->nullable(false);
             $table->timestamps();
         });
     }

@@ -22,6 +22,7 @@ return new class extends Migration
             $table->dateTime('DTVencimento');
             $table->timestamp('DTCadastro')->useCurrent();
             $table->string('SKUProduto',6)->nullable(false);
+            $table->integer('NUEstoqueProduto');
             $table->timestamps();
         });
     }
