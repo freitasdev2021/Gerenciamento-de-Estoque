@@ -25,4 +25,20 @@ class Colaborador extends Model
         'IDComissao',
         'IDFilial',
     ];
+
+    /**
+     * Relacionamento com a Filial.
+     */
+    public function filial()
+    {
+        return $this->belongsTo(Filial::class, 'IDFilial', 'IDFilial');
+    }
+
+    /**
+     * Relacionamento com a Comissão.
+     */
+    public function comissao()
+    {
+        return $this->belongsTo(Comissao::class, 'IDComissao', 'IDComissao');
+    }
 }

@@ -20,4 +20,20 @@ class Empresa extends Model
         'NUCnpjEmpresa',
         'STEmpresa',
     ];
+
+    /**
+     * Relacionamento com o Contrato.
+     */
+    public function contrato()
+    {
+        return $this->belongsTo(Contrato::class, 'IDContrato', 'IDContrato');
+    }
+
+    /**
+     * Relacionamento com as Filiais da empresa.
+     */
+    public function filiais()
+    {
+        return $this->hasMany(Filial::class, 'IDEmpresa', 'IDEmpresa');
+    }
 }

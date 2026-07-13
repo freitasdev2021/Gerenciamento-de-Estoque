@@ -19,4 +19,20 @@ class Filial extends Model
         'NMFilial',
         'NUTelefoneFilial',
     ];
+
+    /**
+     * Relacionamento com a Empresa.
+     */
+    public function empresa()
+    {
+        return $this->belongsTo(Empresa::class, 'IDEmpresa', 'IDEmpresa');
+    }
+
+    /**
+     * Relacionamento com os Colaboradores da filial.
+     */
+    public function colaboradores()
+    {
+        return $this->hasMany(Colaborador::class, 'IDFilial', 'IDFilial');
+    }
 }

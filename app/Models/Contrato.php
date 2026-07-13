@@ -21,5 +21,22 @@ class Contrato extends Model
         'NMEmailContratante',
         'NUCpfContratante',
         'NUTelefoneContato',
+        'IDCriador',
     ];
+
+    /**
+     * Relacionamento com o Plano.
+     */
+    public function plano()
+    {
+        return $this->belongsTo(Plano::class, 'IDPlano', 'IDPlano');
+    }
+
+    /**
+     * Relacionamento com as Empresas do contrato.
+     */
+    public function empresas()
+    {
+        return $this->hasMany(Empresa::class, 'IDContrato', 'IDContrato');
+    }
 }

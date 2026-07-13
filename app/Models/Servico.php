@@ -20,4 +20,20 @@ class Servico extends Model
         'DSGarantiaServico',
         'STDelete',
     ];
+
+    /**
+     * Relacionamento com a Filial.
+     */
+    public function filial()
+    {
+        return $this->belongsTo(Filial::class, 'IDFilial', 'IDFilial');
+    }
+
+    /**
+     * Relacionamento com as Ordens de Serviço.
+     */
+    public function ordensServico()
+    {
+        return $this->hasMany(OrdemServico::class, 'IDServico', 'IDServico');
+    }
 }
