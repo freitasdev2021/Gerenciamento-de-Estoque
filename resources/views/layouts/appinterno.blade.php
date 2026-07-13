@@ -23,66 +23,93 @@
          @vite(['resources/sass/app.scss', 'resources/js/app.js'])
     </head>
     <body>
-    <div class="d-flex" id="wrapper">
+        <div class="d-flex" id="wrapper">
             <!-- Sidebar-->
-            <div class="border-end" id="sidebar-wrapper" style="background:#234D9D;">
-                <div class="sidebar-heading text-white" style="background:#234D9D;">
-                {{Auth::user()->name}}
+            <div id="sidebar-wrapper">
+                <div class="sidebar-heading">
+                    <div class="user-avatar">
+                        <i class="fa-solid fa-circle-user"></i>
+                    </div>
+                    <div class="user-info">
+                        <span class="user-welcome">Olá,</span>
+                        <span class="user-name">{{Auth::user()->name}}</span>
+                    </div>
                 </div>
+                
                 <div class="list-group list-group-flush navegacao">
-                    <a class="list-group-item list-group-item-action p-3 border-bottom" href="{{route('produtos.index')}}" style="cursor:pointer; {{ (Route::getCurrentRoute()->getName() == 'produtos.index' || Route::getCurrentRoute()->getName() == 'produtos.create' || Route::getCurrentRoute()->getName() == 'produtos.edit') ? 'background:white; color:black' : '' }}"><i class="fa-solid fa-shop"></i>&nbsp;Produtos</a>
-                    <a class="list-group-item list-group-item-action p-3 border-bottom" href="{{route('categorias.index')}}" style="cursor:pointer; {{ (Route::getCurrentRoute()->getName() == 'categorias.index' || Route::getCurrentRoute()->getName() == 'categorias.create' || Route::getCurrentRoute()->getName() == 'categorias.edit') ? 'background:white; color:black' : '' }} "><i class="fa-solid fa-list"></i>&nbsp;Categorias</a>
-                    <a class="list-group-item list-group-item-action p-3 border-bottom" href="{{route('movimentacoes.index')}}" style="cursor:pointer; {{ (Route::getCurrentRoute()->getName() == 'movimentacoes.index' || Route::getCurrentRoute()->getName() == 'movimentacoes.create' || Route::getCurrentRoute()->getName() == 'movimentacoes.edit') ? 'background:white; color:black' : '' }} "><i class="fa-solid fa-box"></i>&nbsp;Estoque</a>
-                    <a class="list-group-item list-group-item-action p-3 border-bottom" href="{{route('relatorios.index')}}" style="{{(Route::getCurrentRoute()->getName() == 'relatorios.index') ? 'background:white; color:black' : '' }} "><i class="fa-solid fa-chart-simple"></i>&nbsp;Relatório</a>
+                    <a class="list-group-item list-group-item-action {{ (Route::currentRouteName() && str_contains(Route::currentRouteName(), 'produtos')) ? 'active' : '' }}" href="{{route('produtos.index')}}">
+                        <i class="fa-solid fa-shop"></i><span>Produtos</span>
+                    </a>
+                    <a class="list-group-item list-group-item-action {{ (Route::currentRouteName() && str_contains(Route::currentRouteName(), 'categorias')) ? 'active' : '' }}" href="{{route('categorias.index')}}">
+                        <i class="fa-solid fa-list"></i><span>Categorias</span>
+                    </a>
+                    <a class="list-group-item list-group-item-action {{ (Route::currentRouteName() && str_contains(Route::currentRouteName(), 'movimentacoes')) ? 'active' : '' }}" href="{{route('movimentacoes.index')}}">
+                        <i class="fa-solid fa-box"></i><span>Estoque</span>
+                    </a>
+                    <a class="list-group-item list-group-item-action {{ Route::currentRouteName() == 'relatorios.index' ? 'active' : '' }}" href="{{route('relatorios.index')}}">
+                        <i class="fa-solid fa-chart-simple"></i><span>Relatório</span>
+                    </a>
                 </div>
             </div>
+
             <!-- Page content wrapper-->
             <div id="page-content-wrapper">
                 <!-- Top navigation-->
-                <nav class="navbar navbar-expand-lg navbar-light border-bottom" style="background:#234D9D;">
-                    <div class="container-fluid" >
-                        <button class="btn btn-light" id="sidebarToggle"><i class="fas fa-bars"></i></button>
-                        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+                <nav class="navbar navbar-expand-lg navbar-light">
+                    <div class="container-fluid">
+                        <button class="btn btn-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+                        
+                        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                            <span class="navbar-toggler-icon"></span>
+                        </button>
+                        
                         <div class="collapse navbar-collapse" id="navbarSupportedContent">
                             <ul class="navbar-nav ms-auto mt-2 mt-lg-0">
-                                <li class="nav-item active"><a class="nav-link text-white" href="" onclick="event.preventDefault();
-                                                     document.getElementById('logout-form').submit();">Sair</a></li>
+                                <li class="nav-item">
+                                    <a class="nav-link btn-logout" href="" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                        <i class="fa-solid fa-right-from-bracket"></i> Sair
+                                    </a>
+                                </li>
                             </ul>
                             <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                                        @csrf
+                                @csrf
                             </form>
                         </div>
                     </div>
                 </nav>
-                <div class="container-fluid conteudo">
+
+                <!-- Conteúdo Principal -->
+                <div class="container-fluid conteudo-principal">
                     @if(session('success'))
-                        <div class="alert alert-success alert-dismissible fade show mt-2" role="alert">
-                            {{ session('success') }}
+                        <div class="alert alert-success alert-dismissible fade show custom-alert" role="alert">
+                            <i class="fa-solid fa-circle-check"></i> {{ session('success') }}
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     @endif
                     @if(session('error'))
-                        <div class="alert alert-danger alert-dismissible fade show mt-2" role="alert">
-                            {{ session('error') }}
+                        <div class="alert alert-danger alert-dismissible fade show custom-alert" role="alert">
+                            <i class="fa-solid fa-circle-exclamation"></i> {{ session('error') }}
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     @endif
-                    @yield('content')
+                    
+                    <div class="page-card">
+                        @yield('content')
+                    </div>
                 </div>
-                
             </div>
-        <!-- Bootstrap core JS-->
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-        <!-- Core theme JS-->
-        <script src="{{asset('js/jquery.min.js')}}"></script>
-        <script src="{{asset('js/libs/maskmoney.js')}}"></script>
-        <script src="{{asset('js/scripts.js')}}"></script>
-        <script src="{{asset('js/libs/jquery.mask.js')}}"></script>
-        <script src="{{asset('js/libs/responsive.bootstrap4.min.js')}}"></script>
-        <script src="{{asset('js/libs/datatables.js')}}"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js "></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
         </div>
     </body>
+    <!-- Bootstrap core JS-->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Core theme JS-->
+    <script src="{{asset('js/jquery.min.js')}}"></script>
+    <script src="{{asset('js/libs/maskmoney.js')}}"></script>
+    <script src="{{asset('js/scripts.js')}}"></script>
+    <script src="{{asset('js/libs/jquery.mask.js')}}"></script>
+    <script src="{{asset('js/libs/responsive.bootstrap4.min.js')}}"></script>
+    <script src="{{asset('js/libs/datatables.js')}}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js "></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
 </html>

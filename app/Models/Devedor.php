@@ -18,4 +18,12 @@ class Devedor extends Model
         'VLDivida',
         'DTInicioDivida',
     ];
+
+    /**
+     * Relacionamento com o Cliente.
+     */
+    public function cliente()
+    {
+        return $this->belongsTo(Cliente::class, 'IDCliente', 'IDCliente');
+    }
 }

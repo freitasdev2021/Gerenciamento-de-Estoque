@@ -20,4 +20,12 @@ class Cupom extends Model
         'IDCliente',
         'IDFilial',
     ];
+
+    /**
+     * Relacionamento com o Cliente.
+     */
+    public function cliente()
+    {
+        return $this->belongsTo(Cliente::class, 'IDCliente', 'IDCliente');
+    }
 }

@@ -22,4 +22,44 @@ class Cliente extends Model
         'DSEnderecoJSON',
         'STDelete',
     ];
+
+    /**
+     * Relacionamento com a Filial.
+     */
+    public function filial()
+    {
+        return $this->belongsTo(Filial::class, 'IDFilial', 'IDFilial');
+    }
+
+    /**
+     * Relacionamento com Devedor (um cliente pode ter uma dívida).
+     */
+    public function devedor()
+    {
+        return $this->hasOne(Devedor::class, 'IDCliente', 'IDCliente');
+    }
+
+    /**
+     * Relacionamento com Crediarios (um cliente pode ter vários créditos).
+     */
+    public function crediarios()
+    {
+        return $this->hasMany(Crediario::class, 'IDCliente', 'IDCliente');
+    }
+
+    /**
+     * Relacionamento com Cupons (compras do cliente).
+     */
+    public function cupons()
+    {
+        return $this->hasMany(Cupom::class, 'IDCliente', 'IDCliente');
+    }
+
+    /**
+     * Relacionamento com Ordens de Serviço.
+     */
+    public function ordensServico()
+    {
+        return $this->hasMany(OrdemServico::class, 'IDCliente', 'IDCliente');
+    }
 }

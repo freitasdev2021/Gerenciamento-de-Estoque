@@ -19,4 +19,12 @@ class Crediario extends Model
         'DTInicioCredito',
         'DTTerminoCredito',
     ];
+
+    /**
+     * Relacionamento com o Cliente.
+     */
+    public function cliente()
+    {
+        return $this->belongsTo(Cliente::class, 'IDCliente', 'IDCliente');
+    }
 }
