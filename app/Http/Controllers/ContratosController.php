@@ -45,8 +45,8 @@ class ContratosController extends Controller
     {
         $result = DB::select(
             "SELECT IDColaborador FROM colaboradores 
-             INNER JOIN usuarios USING(IDColaborador) 
-             WHERE usuarios.IDUsuario = ?",
+             INNER JOIN users USING(IDColaborador) 
+             WHERE users.id = ?",
             [$IDUsuario]
         );
 
