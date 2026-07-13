@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Produtos;
+use App\Models\Produto;
 use App\Models\Movimentacoes;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
@@ -28,7 +28,7 @@ class MovimentacoesController extends Controller
      */
     public function create(){
         return view('movimentacoes.create',[
-            "estoque" => Produtos::all()
+            "estoque" => Produto::all()
         ]);
     }
 
@@ -53,7 +53,7 @@ class MovimentacoesController extends Controller
         $retorno['mensagem'] = "Movimentação Realizada com Sucesso";
         $movimentacoes = new Movimentacoes();
         if($request->tipoMovimentacao == "VEN"){
-            $qtEstq = Produtos::where('id',$request->idProduto)->select('NUEstoqueProduto')->first();
+            $qtEstq = Produto::where('id',$request->idProduto)->select('NUEstoqueProduto')->first();
             if($qtEstq->NUEstoqueProduto < $request->quantidadeProduto  ){
                 $retorno['mensagem'] = "A Quantidade a ser Vendida e maior que a que Está no Estoque!";
                 $retorno['status'] = false;

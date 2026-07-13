@@ -5,7 +5,7 @@ use App\Http\Controllers\geralController;
 
 @section('content')
 <div class="col-sm-12">
-    <a href="{{route('produtos.create')}}" class="btn btn-success">Adicionar</a>
+    <a href="{{ route('produtos.create') }}" class="btn btn-success">Adicionar</a>
 </div>
 <hr>
 <div class="col-sm-12">
@@ -18,7 +18,6 @@ use App\Http\Controllers\geralController;
                 <th>Valor</th>
                 <th>Descrição</th>
                 <th>SKU</th>
-                <th>U.Edição</th>
                 <th>Cadastro</th>
                 <th>Opções</th>
             </tr>
@@ -26,25 +25,28 @@ use App\Http\Controllers\geralController;
         <tbody>
             @foreach($produtos as $p)
             <tr>
-                <td>{{$p->NMProduto}}</td>
-                <td>{{$p->NUEstoqueProduto}}</td>
-                <td>{{($p->DTVencimento == '0000-00-00 00:00:00' ? 'Não Tem' : geralController::data($p->DTVencimento,'d/m/Y') )}}</td>
-                <td>{{geralController::trataValor($p->NUValorProduto,0)}}</td>
-                <td>{{$p->DSProduto}}</td>
-                <td>{{$p->SKUProduto}}</td>
-                <td>{{geralController::data($p->DTEdicao,'d/m/Y H:i')}}</td>
-                <td>{{geralController::data($p->DTCadastro,'d/m/Y H:i')}}</td>
+                <td>{{ $p->NMProduto }}</td>
+                <td>{{ $p->NUEstoqueProduto }}</td>
+                <td>{{ ($p->DTVencimento == '0000-00-00 00:00:00' ? 'Não Tem' : geralController::data($p->DTVencimento, 'd/m/Y')) }}</td>
+                <td>{{ geralController::trataValor($p->NUValorProduto, 0) }}</td>
+                <td>{{ $p->DSProduto }}</td>
+                <td>{{ $p->SKUProduto }}</td>
+                <td>{{ geralController::data($p->DTCadastro, 'd/m/Y H:i') }}</td>
                 <td>
-                    <button class="btn btn-danger btn-excluir-produto" data-id="{{$p->IDProduto}}" data-csrf="{{ csrf_token() }}">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
-                    <a class="btn btn-primary" href="{{route('produtos.edit',$p->IDProduto)}}">
+                    <form action="{{ route('produtos.destroy', $p->IDProduto) }}" method="POST" style="display:inline;" onsubmit="return confirm('Deseja Excluir Esse Produto?')">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </form>
+                    <a class="btn btn-primary" href="{{ route('produtos.edit', $p->IDProduto) }}">
                         <i class="fa-solid fa-pen"></i>
                     </a>
                 </td>
             </tr>
             @endforeach
-        </tbody>    
+        </tbody>
     </table>
 </div>
 @endsection

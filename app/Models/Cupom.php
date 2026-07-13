@@ -5,16 +5,19 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class categorias extends Model
+class Cupom extends Model
 {
     use HasFactory;
 
-    protected $table = 'categorias';
-    protected $primaryKey = 'IDCategoria';
+    protected $table = 'cupons';
+    protected $primaryKey = 'IDCupom';
     public $timestamps = false;
 
     protected $fillable = [
-        'DSCategoria',
+        'IDCaixa',
+        'ANCupom',
+        'CDVenda',
+        'IDCliente',
         'IDFilial',
     ];
 }

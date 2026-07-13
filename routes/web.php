@@ -21,39 +21,38 @@ Route::get('/', function () {
     return view('auth.login');
 });
 
-Route::get('/produtos', [ProdutosController::class, 'index'])->middleware(['auth', 'verified'])->name('produtos.index');
-
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    //CATEGORIAS
-    Route::get('/categorias/create', [CategoriasController::class, 'create'])->name('categorias.create'); //FORMULARIO DE CRIAÇÃO
-    Route::get('/categorias/editar/{id}', [CategoriasController::class, 'edit'])->name('categorias.edit'); //IMPRESSÃO PARA EDIÇÃO
-    Route::post('/categorias/editar/update', [CategoriasController::class, 'update'])->name('categorias.update'); //ATUALIZAR CATEGORIA
-    Route::post('/categorias/set', [CategoriasController::class, 'set'])->name('categorias.setCategoria'); //SALVAR CATEGORIA
-    Route::post('/categorias/delete', [CategoriasController::class, 'destroy'])->name('categorias.delete'); //EXCLUIR CATEGORIA
-    Route::get('/categorias', [CategoriasController::class, 'index'])->name('categorias.index'); //MOSTRAR CATEGORIAS
-    //MOVIMENTAÇÕES
-    Route::get('/movimentacoes', [MovimentacoesController::class, 'index'])->name('movimentacoes.index'); //MOSTRAR MOVIMENTAÇÕES
-    Route::get('/movimentacoes/create', [MovimentacoesController::class, 'create'])->name('movimentacoes.create'); //FORMULARIO MOVIMENTAÇÃO
-    Route::post('/movimentacoes/set', [MovimentacoesController::class,'set'])->name('movimentacoes.setMovimentacao'); //SALVAR MOVIMENTAÇÃO
-    //PRODUTOS
-    Route::get('/produtos/create', [ProdutosController::class, 'create'])->name('produtos.create'); //FORMULARIO DE PRODUTOS
-    Route::get('/produtos/editar/{id}', [ProdutosController::class, 'edit'])->name('produtos.edit'); //IMPRESSÃO PARA EDIÇÃO
-    Route::post('/produtos/editar/update', [ProdutosController::class, 'update'])->name('produtos.update'); //ATUALIZAR PRODUTO
-    Route::post('/produtos/set', [ProdutosController::class,'set'])->name('categorias.setProduto'); //SALVAR PRODUTO
-    Route::post('/produtos/delete', [ProdutosController::class,'destroy'])->name('produtos.delete'); //EXCLUIR PRODUTO
-    //RELATÓRIOS
-    Route::get('/relatorios', [MovimentacoesController::class, 'indexRel'])->name('relatorios.index'); //MOSTRAR MOVIMENTAÇÕES
-    Route::post('/relatorios/graficos', [MovimentacoesController::class, 'getRelatorio'])->name('relatorios.graficos'); //MOSTRAR MOVIMENTAÇÕES
+
+    // CATEGORIAS
+    Route::get('/categorias', [CategoriasController::class, 'index'])->name('categorias.index');
+    Route::get('/categorias/create', [CategoriasController::class, 'create'])->name('categorias.create');
+    Route::post('/categorias', [CategoriasController::class, 'store'])->name('categorias.store');
+    Route::get('/categorias/{id}/edit', [CategoriasController::class, 'edit'])->name('categorias.edit');
+    Route::put('/categorias/{id}', [CategoriasController::class, 'update'])->name('categorias.update');
+    Route::delete('/categorias/{id}', [CategoriasController::class, 'destroy'])->name('categorias.destroy');
+
+    // MOVIMENTAÇÕES
+    Route::get('/movimentacoes', [MovimentacoesController::class, 'index'])->name('movimentacoes.index');
+    Route::get('/movimentacoes/create', [MovimentacoesController::class, 'create'])->name('movimentacoes.create');
+    Route::post('/movimentacoes/set', [MovimentacoesController::class, 'set'])->name('movimentacoes.setMovimentacao');
+
+    // PRODUTOS
+    Route::get('/produtos', [ProdutosController::class, 'index'])->name('produtos.index');
+    Route::get('/produtos/create', [ProdutosController::class, 'create'])->name('produtos.create');
+    Route::post('/produtos', [ProdutosController::class, 'store'])->name('produtos.store');
+    Route::get('/produtos/{id}/edit', [ProdutosController::class, 'edit'])->name('produtos.edit');
+    Route::put('/produtos/{id}', [ProdutosController::class, 'update'])->name('produtos.update');
+    Route::delete('/produtos/{id}', [ProdutosController::class, 'destroy'])->name('produtos.destroy');
+
+    // RELATÓRIOS
+    Route::get('/relatorios', [MovimentacoesController::class, 'indexRel'])->name('relatorios.index');
+    Route::post('/relatorios/graficos', [MovimentacoesController::class, 'getRelatorio'])->name('relatorios.graficos');
 });
 
 require __DIR__.'/auth.php';
-
-Auth::routes();
-
-Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
 Auth::routes();
 

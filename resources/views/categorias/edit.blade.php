@@ -3,23 +3,20 @@
 @section('content')
 
 <div class="col-sm-12 container p-3">
-    <form id="formCategorias" class="form-controls">
+    <form action="{{ route('categorias.update', $categoria->IDCategoria) }}" method="POST">
         @csrf
-        @method('POST')
-        <meta name="csrf-token" content="{{ csrf_token() }}">
-        <input type="hidden" name="idcat" value="{{$categoria->id}}">
-        <input type="hidden" name="IDContaPagar">
+        @method('PUT')
         <div class="row">
             <div class="col-sm-4 input">
                 <label>Nome da Categoria</label>
-                <input type="text" name="nomeCategoria" class="form-control" minlength="5" maxlength="50" value="{{$categoria->DSCategoria}}">
-                <div class="error-input text-danger">
-                Preenchimento incorreto!
-                </div>
+                <input type="text" name="nomeCategoria" class="form-control" minlength="1" maxlength="50" value="{{ old('nomeCategoria', $categoria->DSCategoria) }}" required>
+                @error('nomeCategoria')
+                    <div class="text-danger">{{ $message }}</div>
+                @enderror
             </div>
             <div class="col-sm-4 input">
                 <br>
-                <button class="btn btn-success" type="submit">Enviar</button>
+                <button class="btn btn-success" type="submit">Atualizar</button>
             </div>
         </div>
     </form>

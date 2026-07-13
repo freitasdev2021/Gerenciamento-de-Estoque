@@ -5,16 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class categorias extends Model
+class Filial extends Model
 {
     use HasFactory;
 
-    protected $table = 'categorias';
-    protected $primaryKey = 'IDCategoria';
+    protected $table = 'filiais';
+    protected $primaryKey = 'IDFilial';
     public $timestamps = false;
 
     protected $fillable = [
-        'DSCategoria',
-        'IDFilial',
+        'IDEmpresa',
+        'DSEnderecoJSON',
+        'NMFilial',
+        'NUTelefoneFilial',
     ];
 }

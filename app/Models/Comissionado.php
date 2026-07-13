@@ -5,16 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class categorias extends Model
+class Comissionado extends Model
 {
     use HasFactory;
 
-    protected $table = 'categorias';
-    protected $primaryKey = 'IDCategoria';
+    protected $table = 'comissionados';
+    protected $primaryKey = 'IDComissionado';
     public $timestamps = false;
 
     protected $fillable = [
-        'DSCategoria',
-        'IDFilial',
+        'IDComissao',
+        'IDColaborador',
     ];
 }
