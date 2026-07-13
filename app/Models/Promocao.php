@@ -22,4 +22,28 @@ class Promocao extends Model
         'IDFilial',
         'STDelete',
     ];
+
+    /**
+     * Relacionamento com a Filial.
+     */
+    public function filial()
+    {
+        return $this->belongsTo(Filial::class, 'IDFilial', 'IDFilial');
+    }
+
+    /**
+     * Relacionamento com os produtos promocionais vinculados.
+     */
+    public function promocionais()
+    {
+        return $this->hasMany(Promocional::class, 'IDPromocao', 'IDPromocao');
+    }
+
+    /**
+     * Relacionamento com as vendas que usaram esta promoção.
+     */
+    public function vendas()
+    {
+        return $this->hasMany(Venda::class, 'IDPromocao', 'IDPromocao');
+    }
 }

@@ -17,4 +17,20 @@ class Comissionado extends Model
         'IDComissao',
         'IDColaborador',
     ];
+
+    /**
+     * Relacionamento com a Comissão.
+     */
+    public function comissao()
+    {
+        return $this->belongsTo(Comissao::class, 'IDComissao', 'IDComissao');
+    }
+
+    /**
+     * Relacionamento com o Colaborador.
+     */
+    public function colaborador()
+    {
+        return $this->belongsTo(Colaborador::class, 'IDColaborador', 'IDColaborador');
+    }
 }
