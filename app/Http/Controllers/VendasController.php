@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Cliente;
+use App\Models\Filial;
 use App\Models\Pagamento;
 use App\Models\Produto;
 use App\Models\Venda;
@@ -10,6 +12,145 @@ use Illuminate\Support\Facades\DB;
 
 class VendasController extends Controller
 {
+    // ======================
+    // MÉTODOS RESOURCE (CRUD)
+    // ======================
+
+    /**
+     * Display a listing of sales.
+     */
+    public function index()
+    {
+        $filialId = $_SESSION['login']['filial'] ?? null;
+
+        $vendas = self::getListaVendas($filialId);
+        $filiais = Filial::orderBy('NMFilial')->get();
+
+        return view('vendas.index', compact('vendas', 'filiais', 'filialId'));
+    }
+
+    /**
+     * Show the form for making a sale.
+     */
+    public function create(Request $request)
+    {
+        $filialId = $_SESSION['login']['filial'] ?? 1;
+        $produtoId = $request->input('produto');
+
+        $produto = null;
+        if ($produtoId) {
+            $produto = Produto::with('fornecedor')->find($produtoId);
+        }
+
+        $clientes = Cliente::whereNull('STDelete')
+            ->where('IDFilial', $filialId)
+            ->orderBy('NMCliente')
+            ->get();
+
+        $pagamentos = Pagamento::whereNull('STDelete')
+            ->where('IDFilial', $filialId)
+            ->orderBy('NMPagamento')
+            ->get();
+
+        return view('vendas.create', compact('produto', 'clientes', 'pagamentos', 'filialId'));
+    }
+
+    /**
+     * Process a sale.
+     */
+    public function store(Request $request)
+    {
+        $request->validate([
+            'IDProduto'         => 'required|integer|exists:produtos,IDProduto',
+            'IDCliente'         => 'required|integer|exists:clientes,IDCliente',
+            'IDPagamento'       => 'required|integer|exists:pagamentos,IDPagamento',
+            'NUUnidadesVendidas' => 'required|integer|min:1',
+        ]);
+
+        $filialId = $_SESSION['login']['filial'] ?? null;
+        $produto = Produto::with('fornecedor')->findOrFail($request->IDProduto);
+
+        // Verifica estoque
+        if ($produto->NUEstoqueProduto < $request->NUUnidadesVendidas) {
+            return redirect()->back()->with('error', 'Estoque insuficiente! Disponível: ' . $produto->NUEstoqueProduto)->withInput();
+        }
+
+        // Calcula o valor com promoção
+        $valorComPromocao = PromocoesController::confProdutoPromocional(
+            $produto->IDProduto,
+            $produto->NUValorProduto,
+            $filialId
+        );
+
+        $valorVenda = $valorComPromocao * $request->NUUnidadesVendidas;
+
+        // Aplica desconto do pagamento
+        $valorComDesconto = self::getDescontoPagamento($valorVenda, $request->IDPagamento);
+
+        // Obtém o ID da promoção ativa (se houver)
+        $idPromocao = $this->getPromocaoAtiva($produto->IDProduto, $filialId);
+        $idFornecedor = $produto->fornecedor->IDFornecedor ?? 0;
+
+        try {
+            self::setVenda([
+                'IDProduto'          => $produto->IDProduto,
+                'IDFornecedor'       => $idFornecedor,
+                'IDPromocao'         => $idPromocao,
+                'IDCliente'          => $request->IDCliente,
+                'IDColaborador'      => ContratosController::getColaboradorByUser($_SESSION['login']['dados']['id'] ?? 0),
+                'NUUnidadesVendidas' => $request->NUUnidadesVendidas,
+                'IDCaixa'            => 0,
+                'IDFilial'           => $filialId,
+                'IDPagamento'        => $request->IDPagamento,
+                'VLVenda'            => $valorComDesconto,
+                'CDVenda'            => '',
+                'IDOrdem'            => '',
+            ]);
+
+            return redirect()->route('vendas.index')->with('success', 'Venda realizada com sucesso!');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Erro ao processar a venda: ' . $e->getMessage())->withInput();
+        }
+    }
+
+    /**
+     * Cancel a sale.
+     */
+    public function destroy($id)
+    {
+        Venda::where('IDVenda', $id)->update(['STVenda' => 0]);
+
+        return redirect()->route('vendas.index')->with('success', 'Venda cancelada com sucesso!');
+    }
+
+    // ============================
+    // MÉTODOS AUXILIARES DO RESOURCE
+    // ============================
+
+    /**
+     * Retorna o ID da promoção ativa para um produto.
+     */
+    private function getPromocaoAtiva($IDProduto, $IDFilial)
+    {
+        $result = DB::select(
+            "SELECT promocoes.IDPromocao
+             FROM promocoes
+             INNER JOIN promocionais USING(IDPromocao)
+             WHERE NOW() >= promocoes.DTInicioPromo
+               AND NOW() <= promocoes.DTTerminoPromo
+               AND promocoes.IDFilial = ?
+               AND promocionais.IDProduto = ?
+             LIMIT 1",
+            [$IDFilial, $IDProduto]
+        );
+
+        return !empty($result) ? $result[0]->IDPromocao : 0;
+    }
+
+    // ================================
+    // MÉTODOS ESTÁTICOS (COMPATIBILIDADE)
+    // ================================
+
     /**
      * Cancela uma venda (total ou parcial), com opção de repor estoque.
      *
@@ -23,7 +164,6 @@ class VendasController extends Controller
         $Vendas       = $dados['Vendas'];
         $Acao         = $dados['Acao'];
 
-        // Busca dados do produto vinculado à venda
         $venda = DB::select(
             "SELECT NUCustoProduto, NUEstoqueProduto, IDProduto, VLVenda 
              FROM produtos 
@@ -40,7 +180,6 @@ class VendasController extends Controller
         $vlvenda = $produto->VLVenda / $Vendas;
 
         if ($QTDevolucao == $Vendas) {
-            // Devolução total: cancela a venda
             Venda::where('IDVenda', $IDVenda)
                 ->update(['STVenda' => 0]);
 
@@ -49,7 +188,6 @@ class VendasController extends Controller
                     ->increment('NUEstoqueProduto', $QTDevolucao);
             }
         } else {
-            // Devolução parcial: reduz unidades e valor
             Venda::where('IDVenda', $IDVenda)->update([
                 'NUUnidadesVendidas' => DB::raw("NUUnidadesVendidas - $QTDevolucao"),
                 'VLVenda'            => DB::raw("VLVenda - $vlvenda"),
@@ -66,7 +204,6 @@ class VendasController extends Controller
 
     /**
      * Retorna lista de vendas (produtos, não insumos) de uma filial.
-     * Query complexa com múltiplos JOINs.
      *
      * @param  int   $IDFilial
      * @return array
@@ -98,14 +235,14 @@ class VendasController extends Controller
             LEFT JOIN colaboradores ON(colaboradores.IDColaborador = vendas.IDColaborador)
             LEFT JOIN fornecedores ON(fornecedores.IDFornecedor = produtos.IDFornecedor)
             LEFT JOIN filiais ON(filiais.IDFilial = fornecedores.IDFilial)
-            WHERE STInsumo = 0 AND filiais.IDFilial = ? AND STVenda = 1",
+            WHERE STInsumo = 0 AND filiais.IDFilial = ? AND STVenda = 1
+            ORDER BY DTVenda DESC",
             [$IDFilial]
         );
     }
 
     /**
      * Retorna lista de vendas de insumos de uma filial.
-     * Query complexa com múltiplos JOINs.
      *
      * @param  int   $IDFilial
      * @return array
@@ -140,7 +277,8 @@ class VendasController extends Controller
             INNER JOIN servicos ON(servicos.IDFilial = filiais.IDFilial)
             INNER JOIN ordemservico ON(ordemservico.IDServico = servicos.IDServico)
             LEFT JOIN custosordem ON(ordemservico.IDOrdem = custosordem.IDOrdem)
-            WHERE STInsumo = 1 AND filiais.IDFilial = ?",
+            WHERE STInsumo = 1 AND filiais.IDFilial = ?
+            ORDER BY DTVenda DESC",
             [$IDFilial]
         );
     }
@@ -206,7 +344,6 @@ class VendasController extends Controller
                 'IDOrdem'            => $ordi,
             ]);
 
-            // Decrementa o estoque do produto
             Produto::where('IDProduto', $dados['IDProduto'])
                 ->decrement('NUEstoqueProduto', $dados['NUUnidadesVendidas']);
 
@@ -219,8 +356,7 @@ class VendasController extends Controller
     }
 
     /**
-     * Retorna dados agregados de vendas de um produto (quantidade, valor líquido e bruto).
-     * Query complexa com SUM, CASE WHEN e cálculo de descontos.
+     * Retorna dados agregados de vendas de um produto.
      *
      * @param  int   $IDProduto
      * @return array
@@ -242,8 +378,8 @@ class VendasController extends Controller
 
         if (empty($result) || !$result[0]->quantidadeVendas) {
             return [
-                "quantidade"      => 0,
-                "valorVendas"     => 0,
+                "quantidade"       => 0,
+                "valorVendas"      => 0,
                 "valorVendasBruto" => 0,
             ];
         }
@@ -288,7 +424,7 @@ class VendasController extends Controller
     }
 
     /**
-     * Retorna a situação financeira de um cliente (dívida e crédito).
+     * Retorna a situação financeira de um cliente.
      *
      * @param  int   $IDCliente
      * @return array
@@ -309,7 +445,6 @@ class VendasController extends Controller
 
     /**
      * Calcula o valor com desconto baseado no método de pagamento.
-     * TPDesconto: 1 = percentual (%), 2 = valor fixo (R$)
      *
      * @param  float  $valor
      * @param  int    $pagamento  ID do pagamento (0 = sem pagamento)
@@ -328,10 +463,8 @@ class VendasController extends Controller
         }
 
         if ($pag->TPDesconto == 1) {
-            // Percentual
             $desconto = $valor - ($pag->QTDesconto * $valor) / 100;
         } elseif ($pag->TPDesconto == 2) {
-            // Valor fixo
             $desconto = $valor - $pag->QTDesconto;
         } else {
             $desconto = $valor;

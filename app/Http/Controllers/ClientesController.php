@@ -6,14 +6,160 @@ use App\Models\Cliente;
 use App\Models\Crediario;
 use App\Models\Cupom;
 use App\Models\Devedor;
+use App\Models\Filial;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class ClientesController extends Controller
 {
+    // ======================
+    // MÉTODOS RESOURCE (CRUD)
+    // ======================
+
+    /**
+     * Display a listing of the resource.
+     * Filtro opcional por filial via query string ?filial=ID
+     */
+    public function index(Request $request)
+    {
+        $filialSelecionada = $request->input('filial', $_SESSION['login']['filial'] ?? null);
+
+        $clientes = Cliente::whereNull('STDelete')
+            ->when($filialSelecionada, function ($query, $filialSelecionada) {
+                return $query->where('IDFilial', $filialSelecionada);
+            })
+            ->with('devedor')
+            ->orderBy('NMCliente')
+            ->get()
+            ->map(function ($cliente) {
+                $cliente->divida = $cliente->devedor ? $cliente->devedor->VLDivida : 0;
+                return $cliente;
+            });
+
+        $filiais = Filial::orderBy('NMFilial')->get();
+
+        return view('clientes.index', compact('clientes', 'filiais', 'filialSelecionada'));
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        $cliente = null;
+        $filiais = Filial::orderBy('NMFilial')->get();
+        return view('clientes.create', compact('cliente', 'filiais'));
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        $request->validate([
+            'nomeCliente'     => 'required|string|min:1|max:100',
+            'emailCliente'    => 'nullable|email|max:150',
+            'telefoneCliente' => 'nullable|string|max:20',
+            'cpfCliente'      => 'nullable|string|max:20',
+            'IDFilial'        => 'nullable|integer|exists:filiais,IDFilial',
+        ]);
+
+        $filialId = $request->IDFilial ?: ($_SESSION['login']['filial'] ?? null);
+
+        Cliente::create([
+            'NMCliente'         => $request->nomeCliente,
+            'NMEmailCliente'    => $request->emailCliente,
+            'NUTelefoneCliente' => $request->telefoneCliente,
+            'NUCpfCliente'      => $request->cpfCliente,
+            'IDFilial'          => $filialId,
+        ]);
+
+        return redirect()->route('clientes.index')->with('success', 'Cliente cadastrado com sucesso!');
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     * Exibe também os cards de produtos comprados e serviços consumidos.
+     */
+    public function edit($id)
+    {
+        $cliente  = Cliente::findOrFail($id);
+        $filiais  = Filial::orderBy('NMFilial')->get();
+        $servicos = self::getServicosCliente($id);
+        $compras  = self::getCompras($id);
+
+        // Busca as vendas de produtos do cliente (para o card "Produtos Comprados")
+        $produtosComprados = DB::select(
+            "SELECT 
+                v.IDVenda,
+                p.NMProduto,
+                v.NUUnidadesVendidas,
+                v.VLVenda,
+                v.DTVenda,
+                pag.NMPagamento
+             FROM vendas v
+             INNER JOIN produtos p ON p.IDProduto = v.IDProduto
+             INNER JOIN pagamentos pag ON pag.IDPagamento = v.IDPagamento
+             WHERE v.IDCliente = ? AND v.STVenda = 1 AND p.STInsumo = 0
+             ORDER BY v.DTVenda DESC",
+            [$id]
+        );
+
+        return view('clientes.create', compact('cliente', 'filiais', 'servicos', 'compras', 'produtosComprados'));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'nomeCliente'     => 'required|string|min:1|max:100',
+            'emailCliente'    => 'nullable|email|max:150',
+            'telefoneCliente' => 'nullable|string|max:20',
+            'cpfCliente'      => 'nullable|string|max:20',
+            'IDFilial'        => 'nullable|integer|exists:filiais,IDFilial',
+        ]);
+
+        $cliente = Cliente::findOrFail($id);
+        $cliente->update([
+            'NMCliente'         => $request->nomeCliente,
+            'NMEmailCliente'    => $request->emailCliente,
+            'NUTelefoneCliente' => $request->telefoneCliente,
+            'NUCpfCliente'      => $request->cpfCliente,
+            'IDFilial'          => $request->IDFilial ?: $cliente->IDFilial,
+        ]);
+
+        return redirect()->route('clientes.index')->with('success', 'Cliente atualizado com sucesso!');
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy($id)
+    {
+        $temDevedor   = Devedor::where('IDCliente', $id)->exists();
+        $temCrediario = Crediario::where('IDCliente', $id)->exists();
+
+        if ($temDevedor) {
+            return redirect()->back()->with('error', 'Você não pode excluir esse cliente pois ele tem uma dívida.');
+        }
+
+        if ($temCrediario) {
+            return redirect()->back()->with('error', 'Você não pode excluir esse cliente pois ele tem créditos.');
+        }
+
+        Cliente::destroy($id);
+
+        return redirect()->route('clientes.index')->with('success', 'Cliente excluído com sucesso!');
+    }
+
+    // ================================
+    // MÉTODOS ESTÁTICOS (COMPATIBILIDADE)
+    // ================================
+
     /**
      * Retorna os serviços de um cliente com todos os detalhes relacionados.
-     * Query complexa com múltiplos JOINs e subquery JSON - usa DB::select para compatibilidade.
      *
      * @param  int  $ID  ID do Cliente
      * @return array
@@ -73,9 +219,8 @@ class ClientesController extends Controller
 
     /**
      * Sincroniza/Cria um cliente baseado no CPF.
-     * Se não existir, insere um novo registro.
      *
-     * @param  array  $dados  Dados do cliente (NMCliente, NMEmailCliente, NUTelefoneCliente, NUCpfCliente, IDFilial)
+     * @param  array  $dados
      * @return void
      */
     public static function sincronizaCliente($dados)
@@ -108,7 +253,7 @@ class ClientesController extends Controller
      * Retorna os dados de pendências (dívidas) de um cliente.
      *
      * @param  int  $IDCliente
-     * @return array  Retorna array com 'temDivida' e 'valorDivida' formatado
+     * @return array
      */
     public static function getPendencias($IDCliente)
     {
@@ -160,8 +305,7 @@ class ClientesController extends Controller
     }
 
     /**
-     * Retorna clientes que NÃO são devedores e NÃO possuem crediário
-     * (disponíveis para se tornarem devedores).
+     * Retorna clientes que NÃO são devedores e NÃO possuem crediário.
      *
      * @param  int  $IDFilial
      * @return \Illuminate\Database\Eloquent\Collection
@@ -184,8 +328,7 @@ class ClientesController extends Controller
     }
 
     /**
-     * Retorna clientes que NÃO são devedores e NÃO possuem crediário
-     * (disponíveis para receber crediário).
+     * Retorna clientes que NÃO são devedores e NÃO possuem crediário.
      *
      * @param  int  $IDFilial
      * @return \Illuminate\Database\Eloquent\Collection
@@ -264,7 +407,7 @@ class ClientesController extends Controller
      */
     public function excluirCliente($IDCliente, $confirma)
     {
-        $temDevedor  = Devedor::where('IDCliente', $IDCliente)->exists();
+        $temDevedor   = Devedor::where('IDCliente', $IDCliente)->exists();
         $temCrediario = Crediario::where('IDCliente', $IDCliente)->exists();
 
         if ($confirma == 0) {
@@ -310,16 +453,14 @@ class ClientesController extends Controller
     /**
      * Salva ou atualiza um cliente.
      *
-     * @param  array  $dados  Dados do cliente (IDCliente, nomeCliente, emailCliente, telefoneCliente, cpfCliente, filial)
+     * @param  array  $dados
      * @return \App\Models\Cliente
      */
     public function salvarCliente($dados)
     {
-        // Determina a filial: sessão ou parâmetro
         $filial = $_SESSION['login']['filial'] ?? $dados['filial'];
 
         if (!empty($dados['IDCliente'])) {
-            // Atualização
             $cliente = Cliente::find($dados['IDCliente']);
             if ($cliente) {
                 $cliente->update([
@@ -329,7 +470,6 @@ class ClientesController extends Controller
                 ]);
             }
         } else {
-            // Criação
             $cliente = Cliente::create([
                 'NMCliente'         => $dados['nomeCliente'],
                 'NMEmailCliente'    => $dados['emailCliente'],
@@ -345,13 +485,12 @@ class ClientesController extends Controller
     /**
      * Salva ou atualiza um crediário.
      *
-     * @param  array  $dados  Dados do crediário (IDCrediario, nomeCrediario, creditoCrediario, creditoAte)
+     * @param  array  $dados
      * @return \App\Models\Crediario
      */
     public function salvarCrediario($dados)
     {
         if (!empty($dados['IDCrediario'])) {
-            // Atualização
             $crediario = Crediario::find($dados['IDCrediario']);
             if ($crediario) {
                 $crediario->update([
@@ -360,7 +499,6 @@ class ClientesController extends Controller
                 ]);
             }
         } else {
-            // Criação
             $crediario = Crediario::create([
                 'IDCliente'        => $dados['nomeCrediario'],
                 'NUCredito'        => $dados['creditoCrediario'],
@@ -374,13 +512,12 @@ class ClientesController extends Controller
     /**
      * Salva ou atualiza um devedor.
      *
-     * @param  array  $dados  Dados do devedor (IDDevedor, nomeDevedor, valorDivida)
+     * @param  array  $dados
      * @return \App\Models\Devedor
      */
     public function salvarDevedor($dados)
     {
         if (!empty($dados['IDDevedor'])) {
-            // Atualização
             $devedor = Devedor::find($dados['IDDevedor']);
             if ($devedor) {
                 $devedor->update([
@@ -388,7 +525,6 @@ class ClientesController extends Controller
                 ]);
             }
         } else {
-            // Criação
             $devedor = Devedor::create([
                 'IDCliente' => $dados['nomeDevedor'],
                 'VLDivida'  => $dados['valorDivida'],

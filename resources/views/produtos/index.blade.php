@@ -43,6 +43,9 @@ use App\Http\Controllers\geralController;
                     <a class="btn btn-primary" href="{{ route('produtos.edit', $p->IDProduto) }}">
                         <i class="fa-solid fa-pen"></i>
                     </a>
+                    <a class="btn btn-success" href="{{ route('vendas.create', ['produto' => $p->IDProduto]) }}" title="Vender">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                    </a>
                 </td>
             </tr>
             @endforeach

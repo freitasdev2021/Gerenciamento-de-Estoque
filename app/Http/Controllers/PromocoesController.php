@@ -2,16 +2,182 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Filial;
 use App\Models\Promocao;
 use App\Models\Promocional;
-use App\Models\Venda;
 use App\Models\Produto;
-use App\Models\Fornecedor;
+use App\Models\Venda;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class PromocoesController extends Controller
 {
+    // ======================
+    // MÉTODOS RESOURCE (CRUD)
+    // ======================
+
+    /**
+     * Display a listing of the resource.
+     * Filtro opcional por filial via query string ?filial=ID
+     */
+    public function index(Request $request)
+    {
+        $filialSelecionada = $request->input('filial', $_SESSION['login']['filial'] ?? null);
+
+        $promocoes = Promocao::whereNull('STDelete')
+            ->when($filialSelecionada, function ($query, $filialSelecionada) {
+                return $query->where('IDFilial', $filialSelecionada);
+            })
+            ->orderBy('NMPromo')
+            ->get();
+
+        $filiais = Filial::orderBy('NMFilial')->get();
+
+        return view('promocoes.index', compact('promocoes', 'filiais', 'filialSelecionada'));
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        $promocao = null;
+        $filiais = Filial::orderBy('NMFilial')->get();
+        return view('promocoes.create', compact('promocao', 'filiais'));
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        $request->validate([
+            'nomePromo'     => 'required|string|min:1|max:100',
+            'inicioPromo'   => 'required|date',
+            'fimPromo'      => 'required|date|after_or_equal:inicioPromo',
+            'descontoPromo' => 'required|string',
+            'tipoPromo'     => 'required|string|in:1,%',
+            'IDFilial'      => 'nullable|integer|exists:filiais,IDFilial',
+        ]);
+
+        $NUDescontoPromo = $request->tipoPromo == '%'
+            ? intval($request->descontoPromo)
+            : $this->decimal($request->descontoPromo);
+
+        $filialId = $request->IDFilial ?: ($_SESSION['login']['filial'] ?? null);
+
+        Promocao::create([
+            'NMPromo'         => $request->nomePromo,
+            'DTInicioPromo'   => $request->inicioPromo,
+            'DTTerminoPromo'  => $request->fimPromo,
+            'NUDescontoPromo' => $NUDescontoPromo,
+            'TPDesconto'      => $request->tipoPromo,
+            'IDFilial'        => $filialId,
+        ]);
+
+        return redirect()->route('promocoes.index')->with('success', 'Promoção cadastrada com sucesso!');
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit($id)
+    {
+        $promocao = Promocao::findOrFail($id);
+        $filiais = Filial::orderBy('NMFilial')->get();
+        return view('promocoes.create', compact('promocao', 'filiais'));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'nomePromo'     => 'required|string|min:1|max:100',
+            'inicioPromo'   => 'required|date',
+            'fimPromo'      => 'required|date|after_or_equal:inicioPromo',
+            'descontoPromo' => 'required|string',
+            'tipoPromo'     => 'required|string|in:1,%',
+            'IDFilial'      => 'nullable|integer|exists:filiais,IDFilial',
+        ]);
+
+        $NUDescontoPromo = $request->tipoPromo == '%'
+            ? intval($request->descontoPromo)
+            : $this->decimal($request->descontoPromo);
+
+        $promocao = Promocao::findOrFail($id);
+        $promocao->update([
+            'NMPromo'         => $request->nomePromo,
+            'DTInicioPromo'   => $request->inicioPromo,
+            'DTTerminoPromo'  => $request->fimPromo,
+            'NUDescontoPromo' => $NUDescontoPromo,
+            'TPDesconto'      => $request->tipoPromo,
+            'IDFilial'        => $request->IDFilial ?: $promocao->IDFilial,
+        ]);
+
+        return redirect()->route('promocoes.index')->with('success', 'Promoção atualizada com sucesso!');
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy($id)
+    {
+        $temVenda = self::confVendaPromo($id);
+
+        if ($temVenda) {
+            Promocao::where('IDPromocao', $id)->update(['STDelete' => 1]);
+        } else {
+            self::delPromocional($id);
+            Promocao::destroy($id);
+        }
+
+        return redirect()->route('promocoes.index')->with('success', 'Promoção excluída com sucesso!');
+    }
+
+    /**
+     * Exibe a página de vinculação de produtos a uma promoção.
+     */
+    public function vincular($id)
+    {
+        $promocao = Promocao::findOrFail($id);
+        $produtos = self::getPromocional($id);
+
+        return view('promocoes.vincular', compact('promocao', 'produtos'));
+    }
+
+    /**
+     * Salva os vínculos de produtos à promoção.
+     * Chama setPromocional em loop para cada IDProduto enviado.
+     */
+    public function setVinculos(Request $request, $id)
+    {
+        $request->validate([
+            'produtos' => 'nullable|array',
+            'produtos.*' => 'integer|exists:produtos,IDProduto',
+        ]);
+
+        // Remove todos os vínculos atuais
+        self::delPromocional($id);
+
+        // Vincula os produtos selecionados
+        if ($request->has('produtos')) {
+            foreach ($request->produtos as $IDProduto) {
+                self::setPromocional([
+                    'IDPromocao' => $id,
+                    'IDProduto'  => $IDProduto,
+                ]);
+            }
+        }
+
+        return redirect()->route('promocoes.index')->with('success', 'Produtos vinculados à promoção com sucesso!');
+    }
+
+    // ================================
+    // MÉTODOS ESTÁTICOS (COMPATIBILIDADE)
+    // ================================
+
     /**
      * Retorna a lista de promoções ativas de uma filial.
      *
@@ -60,12 +226,10 @@ class PromocoesController extends Controller
         $temVenda = self::confVendaPromo($IDPromocao);
 
         if ($temVenda) {
-            // Soft delete: apenas marca como deletada
             return Promocao::where('IDPromocao', $IDPromocao)
                 ->update(['STDelete' => 1]);
         }
 
-        // Hard delete: remove a promoção e seus vínculos promocionais
         self::delPromocional($IDPromocao);
         return Promocao::destroy($IDPromocao);
     }
@@ -78,16 +242,13 @@ class PromocoesController extends Controller
      */
     public function salvarPromocao($dados)
     {
-        // Calcula o valor do desconto baseado no tipo
         if ($dados['tipoPromo'] == '%') {
             $NUDescontoPromo = intval($dados['descontoPromo']);
         } else {
-            // Converte valor monetário (ex: "1.234,56" → "1234.56")
             $NUDescontoPromo = $this->decimal($dados['descontoPromo']);
         }
 
         if (!empty($dados['IDPromocao'])) {
-            // Atualização
             $promocao = Promocao::find($dados['IDPromocao']);
             if ($promocao) {
                 $promocao->update([
@@ -99,7 +260,6 @@ class PromocoesController extends Controller
                 ]);
             }
         } else {
-            // Criação
             $promocao = Promocao::create([
                 'NMPromo'         => $dados['nomePromo'],
                 'DTInicioPromo'   => $dados['inicioPromo'],
@@ -115,14 +275,13 @@ class PromocoesController extends Controller
 
     /**
      * Retorna lista de produtos com indicador de vínculo a uma promoção.
-     * Query complexa com subquery CASE WHEN e NOT IN - mantida em SQL raw.
      *
      * @param  int  $IDPromocao
      * @return array
      */
     public static function getPromocional($IDPromocao)
     {
-        $filialId = $_SESSION['login']['filial'];
+        $filialId = 1;
 
         $SQL = "
             SELECT 
@@ -172,7 +331,6 @@ class PromocoesController extends Controller
 
     /**
      * Confere se um produto está em alguma promoção ativa e calcula o valor com desconto.
-     * Query complexa com JOINs e condicional de data - mantida em SQL raw.
      *
      * @param  int    $IDProduto
      * @param  float  $valorProduto
@@ -213,5 +371,24 @@ class PromocoesController extends Controller
         }
 
         return $desconto;
+    }
+
+    // ======================
+    // MÉTODO AUXILIAR
+    // ======================
+
+    /**
+     * Converte valor monetário para decimal.
+     * Ex: "1.234,56" → "1234.56"
+     *
+     * @param  string  $valor
+     * @return string
+     */
+    public function decimal($valor)
+    {
+        if (substr_count($valor, ',') == 1 && substr_count($valor, '.') >= 1) {
+            return str_replace(',', '.', str_replace('.', '', $valor));
+        }
+        return str_replace(',', '.', $valor);
     }
 }

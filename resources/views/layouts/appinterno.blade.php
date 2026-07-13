@@ -40,6 +40,9 @@
                     <a class="list-group-item list-group-item-action {{ (Route::currentRouteName() && str_contains(Route::currentRouteName(), 'produtos')) ? 'active' : '' }}" href="{{route('produtos.index')}}">
                         <i class="fa-solid fa-shop"></i><span>Produtos</span>
                     </a>
+                    <a class="list-group-item list-group-item-action {{ (Route::currentRouteName() && str_contains(Route::currentRouteName(), 'clientes')) ? 'active' : '' }}" href="{{route('clientes.index')}}">
+                        <i class="fa-solid fa-users"></i><span>Clientes</span>
+                    </a>
                     <a class="list-group-item list-group-item-action {{ (Route::currentRouteName() && str_contains(Route::currentRouteName(), 'categorias')) ? 'active' : '' }}" href="{{route('categorias.index')}}">
                         <i class="fa-solid fa-list"></i><span>Categorias</span>
                     </a>
@@ -48,6 +51,12 @@
                     </a>
                     <a class="list-group-item list-group-item-action {{ (Route::currentRouteName() && str_contains(Route::currentRouteName(), 'pagamentos')) ? 'active' : '' }}" href="{{route('pagamentos.index')}}">
                         <i class="fa-solid fa-credit-card"></i><span>Pagamentos</span>
+                    </a>
+                    <a class="list-group-item list-group-item-action {{ (Route::currentRouteName() && str_contains(Route::currentRouteName(), 'promocoes')) ? 'active' : '' }}" href="{{route('promocoes.index')}}">
+                        <i class="fa-solid fa-tag"></i><span>Promoções</span>
+                    </a>
+                    <a class="list-group-item list-group-item-action {{ (Route::currentRouteName() && str_contains(Route::currentRouteName(), 'vendas')) ? 'active' : '' }}" href="{{route('vendas.index')}}">
+                        <i class="fa-solid fa-cart-shopping"></i><span>Vendas</span>
                     </a>
                     <a class="list-group-item list-group-item-action {{ (Route::currentRouteName() && str_contains(Route::currentRouteName(), 'movimentacoes')) ? 'active' : '' }}" href="{{route('movimentacoes.index')}}">
                         <i class="fa-solid fa-box"></i><span>Estoque</span>
