@@ -12,7 +12,7 @@
         <div class="row">
             <div class="col-sm-4 input">
                 <label>Nome da Categoria</label>
-                <input type="text" name="nomeCategoria" class="form-control" minlength="5" maxlength="50" value="{{$categoria->NMCategoria}}">
+                <input type="text" name="nomeCategoria" class="form-control" minlength="5" maxlength="50" value="{{$categoria->DSCategoria}}">
                 <div class="error-input text-danger">
                 Preenchimento incorreto!
                 </div>

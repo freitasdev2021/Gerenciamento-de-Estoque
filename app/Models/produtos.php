@@ -11,7 +11,7 @@ class produtos extends Model{
         'IDCategoria',
         'NMProduto',
         'DSProduto',
-        'VLProduto',
+        'NUValorProduto',
         'IMGProduto',
         'DTCadastro',
         'DTVencimento',

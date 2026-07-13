@@ -15,7 +15,7 @@ class MovimentacoesController extends Controller
      */
     public function index(){
         return view('movimentacoes.index',[
-            "movimentacoes" => DB::select("SELECT NMProduto,NMCategoria,TPMovimentacao,VLMovimentacao,QTMovimentacao FROM movimentacoes INNER JOIN produtos ON(produtos.id = movimentacoes.IDProduto) INNER JOIN categorias ON(produtos.IDCategoria = categorias.id)")
+            "movimentacoes" => DB::select("SELECT NMProduto,DSCategoria,TPMovimentacao,VLMovimentacao,QTMovimentacao FROM movimentacoes INNER JOIN produtos ON(produtos.IDProduto = movimentacoes.IDProduto) INNER JOIN categorias ON(produtos.IDCategoria = categorias.IDCategoria)")
         ]);
     }
 
@@ -33,7 +33,7 @@ class MovimentacoesController extends Controller
     }
 
     public function getRelatorio(){
-        $REL = DB::select("SELECT NMProduto,SUM(QTMovimentacao) as QTVenda FROM movimentacoes INNER JOIN produtos ON(produtos.id = movimentacoes.IDProduto) WHERE TPMovimentacao = 'VEN' GROUP BY IDProduto ORDER BY QTMovimentacao ASC LIMIT 10");
+        $REL = DB::select("SELECT NMProduto,SUM(QTMovimentacao) as QTVenda FROM movimentacoes INNER JOIN produtos ON(produtos.IDProduto = movimentacoes.IDProduto) WHERE TPMovimentacao = 'VEN' GROUP BY IDProduto ORDER BY QTMovimentacao ASC LIMIT 10");
         $relProds = array();
         foreach($REL as $r){
             $relProds[] = array(

@@ -29,7 +29,7 @@ use App\Http\Controllers\geralController;
                 <td>{{$p->NMProduto}}</td>
                 <td>{{$p->NUEstoqueProduto}}</td>
                 <td>{{($p->DTVencimento == '0000-00-00 00:00:00' ? 'Não Tem' : geralController::data($p->DTVencimento,'d/m/Y') )}}</td>
-                <td>{{geralController::trataValor($p->VLProduto,0)}}</td>
+                <td>{{geralController::trataValor($p->NUValorProduto,0)}}</td>
                 <td>{{$p->DSProduto}}</td>
                 <td>{{$p->SKUProduto}}</td>
                 <td>{{geralController::data($p->DTEdicao,'d/m/Y H:i')}}</td>

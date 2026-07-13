@@ -23,7 +23,7 @@ use App\Http\Controllers\geralController;
                 <select name="categoriaProduto" class="form-control">
                     <option value="">Selecione</option>
                     @foreach($categorias as $cat)
-                    <option value="{{$cat['id']}}" {{($produto->IDCategoria == $cat['id']) ? 'selected' : ''}}>{{$cat['NMCategoria']}}</option>
+                    <option value="{{$cat['id']}}" {{($produto->IDCategoria == $cat['id']) ? 'selected' : ''}}>{{$cat['DSCategoria']}}</option>
                     @endforeach
                 </select>
                 <div class="error-input text-danger">
@@ -39,7 +39,7 @@ use App\Http\Controllers\geralController;
             </div>
             <div class="col-sm-4 money">
                 <label>Valor(R$)</label>
-                <input type="text" name="valorProduto" value="{{geralController::trataValor($produto->VLProduto,0)}}" class="form-control" minlength="1" maxlength="10">
+                <input type="text" name="valorProduto" value="{{geralController::trataValor($produto->NUValorProduto,0)}}" class="form-control" minlength="1" maxlength="10">
                 <div class="error-input text-danger">
                     P.incorreto!
                 </div>

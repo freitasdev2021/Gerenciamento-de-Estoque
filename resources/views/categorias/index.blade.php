@@ -21,7 +21,7 @@ use App\Http\Controllers\geralController;
         <tbody>
             @foreach($categorias as $cat):
             <tr>
-                <td>{{$cat->NMCategoria}}</td>
+                <td>{{$cat->DSCategoria}}</td>
                 <td>{{$cat->QTEstoque}}</td>
                 <td>{{geralController::trataValor($cat->VLInvestido,0)}}</td>
                 <td>

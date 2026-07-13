@@ -19,7 +19,7 @@
                 <select name="categoriaProduto" class="form-control">
                     <option value="">Selecione</option>
                     @foreach($categorias as $cat)
-                    <option value="{{$cat['id']}}">{{$cat['NMCategoria']}}</option>
+                    <option value="{{$cat['id']}}">{{$cat['DSCategoria']}}</option>
                     @endforeach
                 </select>
                 <div class="error-input text-danger">

@@ -9,6 +9,6 @@ class categorias extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'NMCategoria'
+        'DSCategoria'
     ];
 }

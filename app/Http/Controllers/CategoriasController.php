@@ -13,7 +13,7 @@ class CategoriasController extends Controller
      */
     public function index(){
         return view('categorias.index',[
-            "categorias" => DB::select('SELECT categorias.id,NMCategoria, CASE WHEN VLProduto IS NULL THEN 0 ELSE SUM(VLProduto) END as VLInvestido,SUM(produtos.NUEstoqueProduto) as QTEstoque FROM categorias LEFT JOIN produtos ON(categorias.ID = produtos.IDCategoria) GROUP BY categorias.id ')
+            "categorias" => DB::select('SELECT categorias.IDCategoria,DSCategoria, CASE WHEN NUValorProduto IS NULL THEN 0 ELSE SUM(NUValorProduto) END as VLInvestido,SUM(produtos.NUEstoqueProduto) as QTEstoque FROM categorias LEFT JOIN produtos ON(categorias.IDCategoria = produtos.IDCategoria) GROUP BY categorias.IDCategoria ')
         ]);
     }
 
@@ -32,11 +32,11 @@ class CategoriasController extends Controller
         $retorno['status'] = true;
         $retorno['mensagem'] = "Salvamento Realizado com Sucesso";
         $categoria = new Categorias();
-        if(Categorias::where('NMCategoria',$request->nomeCategoria)->exists()){
+        if(Categorias::where('DSCategoria',$request->nomeCategoria)->exists()){
             $retorno['mensagem'] = "Já Existe uma Categoria com Esse Nome!";
             $retorno['status'] = false;
         }else{
-            $categoria->NMCategoria = $request->nomeCategoria;
+            $categoria->DSCategoria = $request->nomeCategoria;
             $categoria->save();
         }
         return json_encode($retorno);
@@ -58,11 +58,11 @@ class CategoriasController extends Controller
         //INICIO DAS VALIDAÇÕES
         $retorno['status'] = true;
         $retorno['mensagem'] = "Salvamento Realizado com Sucesso";
-        if(DB::select("SELECT id FROM categorias WHERE NMCategoria = '$request->nomeCategoria' AND id != '$request->idCategoria'")){
+        if(DB::select("SELECT id FROM categorias WHERE DSCategoria = '$request->nomeCategoria' AND id != '$request->idCategoria'")){
             $retorno['mensagem'] = "Já Existe uma Categoria com Esse Nome!";
             $retorno['status'] = false;
         }else{
-            DB::update("UPDATE categorias SET NMCategoria = '$request->nomeCategoria' WHERE id = '$request->idCategoria' ");
+            DB::update("UPDATE categorias SET DSCategoria = '$request->nomeCategoria' WHERE id = '$request->idCategoria' ");
         }
         return json_encode($retorno);
     }

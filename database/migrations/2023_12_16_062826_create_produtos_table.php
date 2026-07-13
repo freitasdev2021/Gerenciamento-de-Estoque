@@ -16,7 +16,7 @@ return new class extends Migration
             $table->integer('IDCategoria');
             $table->string('NMProduto',50);
             $table->string('DSProduto',250);
-            $table->float('VLProduto')->default(0);
+            $table->float('NUValorProduto')->default(0);
             $table->binary('IMGProduto')->nullable(false);
             $table->timestamp('DTEdicao')->useCurrent();
             $table->dateTime('DTVencimento');

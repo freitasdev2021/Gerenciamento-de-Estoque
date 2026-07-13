@@ -31,7 +31,7 @@ use App\Http\Controllers\geralController;
                 <select name="produtoMovimentacao" class="form-control">
                     <option value="">Selecione</option>
                     @foreach($estoque as $es)
-                    <option value="{{$es['id']}}">{{$es['NMProduto'] }} - R$ {{geralController::trataValor($es['VLProduto'],0) }} - {{$es['NUEstoqueProduto'] }} Unidades Disponiveis</option>
+                    <option value="{{$es['id']}}">{{$es['NMProduto'] }} - R$ {{geralController::trataValor($es['NUValorProduto'],0) }} - {{$es['NUEstoqueProduto'] }} Unidades Disponiveis</option>
                     @endforeach
                 </select>
                 <div class="error-input text-danger">

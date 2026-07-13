@@ -15,7 +15,7 @@ class ProdutosController extends Controller
      */
     public function index(){
         return view('produtos.index',[
-            "produtos" => DB::select('SELECT *,produtos.id as IDProduto FROM produtos INNER JOIN categorias ON(produtos.IDCategoria = categorias.id)')
+            "produtos" => DB::select('SELECT *,produtos.IDProduto as IDProduto FROM produtos INNER JOIN categorias ON(produtos.IDCategoria = categorias.IDCategoria)')
         ]);
     }
 
@@ -43,7 +43,7 @@ class ProdutosController extends Controller
             $produtos->NMProduto = $request->nomeProduto;
             $produtos->SKUProduto = $request->skuProduto;
             $produtos->DSProduto = $request->descricaoProduto;
-            $produtos->VLProduto = $request->valorProduto;
+            $produtos->NUValorProduto = $request->valorProduto;
             $produtos->IDCategoria = $request->categoriaProduto;
             $produtos->NUEstoqueProduto = $request->estoqueProduto;
             $produtos->DTVencimento = $request->vencimentoProduto;
@@ -74,7 +74,7 @@ class ProdutosController extends Controller
             $retorno['mensagem'] = "Já Existe um Produto com Esse SKU!";
             $retorno['status'] = false;
         }else{
-            DB::update("UPDATE produtos SET NMProduto = '$request->nomeProduto', SKUProduto = '$request->skuProduto', DSProduto = '$request->descricaoProduto',DTEdicao = NOW(), VLProduto = '$request->valorProduto', IMGProduto = '$request->imagemProduto' WHERE id = '$request->idProduto' ");
+            DB::update("UPDATE produtos SET NMProduto = '$request->nomeProduto', SKUProduto = '$request->skuProduto', DSProduto = '$request->descricaoProduto',DTEdicao = NOW(), NUValorProduto = '$request->valorProduto', IMGProduto = '$request->imagemProduto' WHERE id = '$request->idProduto' ");
         }
         return json_encode($retorno);
     }
