@@ -4,6 +4,8 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProdutosController;
 use App\Http\Controllers\MovimentacoesController;
 use App\Http\Controllers\CategoriasController;
+use App\Http\Controllers\FornecedoresController;
+use App\Http\Controllers\PagamentosController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -46,6 +48,22 @@ Route::middleware('auth')->group(function () {
     Route::get('/produtos/{id}/edit', [ProdutosController::class, 'edit'])->name('produtos.edit');
     Route::put('/produtos/{id}', [ProdutosController::class, 'update'])->name('produtos.update');
     Route::delete('/produtos/{id}', [ProdutosController::class, 'destroy'])->name('produtos.destroy');
+
+    // FORNECEDORES
+    Route::get('/fornecedores', [FornecedoresController::class, 'index'])->name('fornecedores.index');
+    Route::get('/fornecedores/create', [FornecedoresController::class, 'create'])->name('fornecedores.create');
+    Route::post('/fornecedores', [FornecedoresController::class, 'store'])->name('fornecedores.store');
+    Route::get('/fornecedores/{id}/edit', [FornecedoresController::class, 'edit'])->name('fornecedores.edit');
+    Route::put('/fornecedores/{id}', [FornecedoresController::class, 'update'])->name('fornecedores.update');
+    Route::delete('/fornecedores/{id}', [FornecedoresController::class, 'destroy'])->name('fornecedores.destroy');
+
+    // PAGAMENTOS
+    Route::get('/pagamentos', [PagamentosController::class, 'index'])->name('pagamentos.index');
+    Route::get('/pagamentos/create', [PagamentosController::class, 'create'])->name('pagamentos.create');
+    Route::post('/pagamentos', [PagamentosController::class, 'store'])->name('pagamentos.store');
+    Route::get('/pagamentos/{id}/edit', [PagamentosController::class, 'edit'])->name('pagamentos.edit');
+    Route::put('/pagamentos/{id}', [PagamentosController::class, 'update'])->name('pagamentos.update');
+    Route::delete('/pagamentos/{id}', [PagamentosController::class, 'destroy'])->name('pagamentos.destroy');
 
     // RELATÓRIOS
     Route::get('/relatorios', [MovimentacoesController::class, 'indexRel'])->name('relatorios.index');

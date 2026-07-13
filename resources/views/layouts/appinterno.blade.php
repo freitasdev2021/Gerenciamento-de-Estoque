@@ -43,6 +43,12 @@
                     <a class="list-group-item list-group-item-action {{ (Route::currentRouteName() && str_contains(Route::currentRouteName(), 'categorias')) ? 'active' : '' }}" href="{{route('categorias.index')}}">
                         <i class="fa-solid fa-list"></i><span>Categorias</span>
                     </a>
+                    <a class="list-group-item list-group-item-action {{ (Route::currentRouteName() && str_contains(Route::currentRouteName(), 'fornecedores')) ? 'active' : '' }}" href="{{route('fornecedores.index')}}">
+                        <i class="fa-solid fa-truck"></i><span>Fornecedores</span>
+                    </a>
+                    <a class="list-group-item list-group-item-action {{ (Route::currentRouteName() && str_contains(Route::currentRouteName(), 'pagamentos')) ? 'active' : '' }}" href="{{route('pagamentos.index')}}">
+                        <i class="fa-solid fa-credit-card"></i><span>Pagamentos</span>
+                    </a>
                     <a class="list-group-item list-group-item-action {{ (Route::currentRouteName() && str_contains(Route::currentRouteName(), 'movimentacoes')) ? 'active' : '' }}" href="{{route('movimentacoes.index')}}">
                         <i class="fa-solid fa-box"></i><span>Estoque</span>
                     </a>

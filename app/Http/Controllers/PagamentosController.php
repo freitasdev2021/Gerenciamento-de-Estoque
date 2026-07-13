@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Filial;
 use App\Models\Pagamento;
 use App\Models\Venda;
 use Illuminate\Http\Request;
@@ -9,6 +10,138 @@ use Illuminate\Support\Facades\DB;
 
 class PagamentosController extends Controller
 {
+    // ======================
+    // MÉTODOS RESOURCE (CRUD)
+    // ======================
+
+    /**
+     * Display a listing of the resource.
+     * Filtro opcional por filial via query string ?filial=ID
+     */
+    public function index(Request $request)
+    {
+        $filialSelecionada = $request->input('filial', $_SESSION['login']['filial'] ?? null);
+
+        $pagamentos = Pagamento::whereNull('STDelete')
+            ->when($filialSelecionada, function ($query, $filialSelecionada) {
+                return $query->where('IDFilial', $filialSelecionada);
+            })
+            ->orderBy('NMPagamento')
+            ->get();
+
+        $filiais = Filial::orderBy('NMFilial')->get();
+
+        return view('pagamentos.index', compact('pagamentos', 'filiais', 'filialSelecionada'));
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        $pagamento = null;
+        $filiais = Filial::orderBy('NMFilial')->get();
+        return view('pagamentos.create', compact('pagamento', 'filiais'));
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(Request $request)
+    {
+        $request->validate([
+            'nomeMetodo'     => 'required|string|min:1|max:100',
+            'metodoMetodo'   => 'required|string|min:1|max:50',
+            'parcelasMetodo' => 'required|integer|min:1|max:99',
+            'tipoMetodo'     => 'required|string|in:1,%',
+            'descontoMetodo' => 'required|string',
+            'jurosMetodo'    => 'nullable|numeric|min:0',
+            'IDFilial'       => 'nullable|integer|exists:filiais,IDFilial',
+        ]);
+
+        $descontoMetodo = $request->tipoMetodo == '1'
+            ? intval($request->descontoMetodo)
+            : $this->decimal($request->descontoMetodo);
+
+        $filialId = $request->IDFilial ?: ($_SESSION['login']['filial'] ?? null);
+
+        Pagamento::create([
+            'NMPagamento' => $request->nomeMetodo,
+            'QTDesconto'  => $descontoMetodo,
+            'DSMetodo'    => $request->metodoMetodo,
+            'QTParcelas'  => $request->parcelasMetodo,
+            'TPDesconto'  => $request->tipoMetodo,
+            'NUJuros'     => $request->jurosMetodo ?? 0,
+            'IDFilial'    => $filialId,
+        ]);
+
+        return redirect()->route('pagamentos.index')->with('success', 'Pagamento cadastrado com sucesso!');
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     * Reutiliza a view create.blade.php passando o pagamento.
+     */
+    public function edit($id)
+    {
+        $pagamento = Pagamento::findOrFail($id);
+        $filiais = Filial::orderBy('NMFilial')->get();
+        return view('pagamentos.create', compact('pagamento', 'filiais'));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'nomeMetodo'     => 'required|string|min:1|max:100',
+            'metodoMetodo'   => 'required|string|min:1|max:50',
+            'parcelasMetodo' => 'required|integer|min:1|max:99',
+            'tipoMetodo'     => 'required|string|in:1,%',
+            'descontoMetodo' => 'required|string',
+            'jurosMetodo'    => 'nullable|numeric|min:0',
+            'IDFilial'       => 'nullable|integer|exists:filiais,IDFilial',
+        ]);
+
+        $descontoMetodo = $request->tipoMetodo == '1'
+            ? intval($request->descontoMetodo)
+            : $this->decimal($request->descontoMetodo);
+
+        $pagamento = Pagamento::findOrFail($id);
+        $pagamento->update([
+            'NMPagamento' => $request->nomeMetodo,
+            'QTDesconto'  => $descontoMetodo,
+            'DSMetodo'    => $request->metodoMetodo,
+            'QTParcelas'  => $request->parcelasMetodo,
+            'TPDesconto'  => $request->tipoMetodo,
+            'NUJuros'     => $request->jurosMetodo ?? 0,
+            'IDFilial'    => $request->IDFilial ?: $pagamento->IDFilial,
+        ]);
+
+        return redirect()->route('pagamentos.index')->with('success', 'Pagamento atualizado com sucesso!');
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy($id)
+    {
+        $temVenda = Venda::where('IDPagamento', $id)->exists();
+
+        if ($temVenda) {
+            Pagamento::where('IDPagamento', $id)->update(['STDelete' => 1]);
+        } else {
+            Pagamento::destroy($id);
+        }
+
+        return redirect()->route('pagamentos.index')->with('success', 'Pagamento excluído com sucesso!');
+    }
+
+    // ================================
+    // MÉTODOS ESTÁTICOS (COMPATIBILIDADE)
+    // ================================
+
     /**
      * Retorna dados de parcelas de um pagamento com JOINs em vendas e cupons.
      *
@@ -108,12 +241,10 @@ class PagamentosController extends Controller
     public function excluirPagamento($IDPagamento)
     {
         if (self::confVendaPagamento($IDPagamento)) {
-            // Soft delete: apenas marca como deletado
             return Pagamento::where('IDPagamento', $IDPagamento)
                 ->update(['STDelete' => 1]);
         }
 
-        // Hard delete
         return Pagamento::destroy($IDPagamento);
     }
 
@@ -136,16 +267,13 @@ class PagamentosController extends Controller
      */
     public function salvarPagamento($dados)
     {
-        // Calcula o valor do desconto baseado no tipo
         if ($dados['tipoMetodo'] == '1') {
             $descontoMetodo = intval($dados['descontoMetodo']);
         } else {
-            // Converte valor monetário (ex: "1.234,56" → "1234.56")
             $descontoMetodo = $this->decimal($dados['descontoMetodo']);
         }
 
         if (!empty($dados['IDPagamento'])) {
-            // Atualização
             $pagamento = Pagamento::find($dados['IDPagamento']);
             if ($pagamento) {
                 $pagamento->update([
@@ -158,7 +286,6 @@ class PagamentosController extends Controller
                 ]);
             }
         } else {
-            // Criação
             $pagamento = Pagamento::create([
                 'NMPagamento' => $dados['nomeMetodo'],
                 'QTDesconto'  => $descontoMetodo,
@@ -171,5 +298,26 @@ class PagamentosController extends Controller
         }
 
         return $pagamento;
+    }
+
+    // ======================
+    // MÉTODO AUXILIAR
+    // ======================
+
+    /**
+     * Converte valor monetário para decimal.
+     * Ex: "1.234,56" → "1234.56"
+     *
+     * @param  string  $valor
+     * @return string
+     */
+    public function decimal($valor)
+    {
+        if (substr_count($valor, ',') == 1 && substr_count($valor, '.') >= 1) {
+            // Formato 1.234,56
+            return str_replace(',', '.', str_replace('.', '', $valor));
+        }
+        // Formato simples 1234,56 → 1234.56
+        return str_replace(',', '.', $valor);
     }
 }
