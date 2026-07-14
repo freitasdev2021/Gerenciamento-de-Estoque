@@ -29,20 +29,6 @@
                 @enderror
             </div>
             <div class="col-sm-4 select mb-2">
-                <label>Filial</label>
-                <select name="IDFilial" class="form-select" required>
-                    <option value="">-- Selecione uma Filial --</option>
-                    @foreach($filiais as $f)
-                        <option value="{{ $f->IDFilial }}" {{ old('IDFilial', $pagamento->IDFilial ?? '') == $f->IDFilial ? 'selected' : '' }}>
-                            {{ $f->NMFilial }}
-                        </option>
-                    @endforeach
-                </select>
-                @error('IDFilial')
-                    <div class="text-danger">{{ $message }}</div>
-                @enderror
-            </div>
-            <div class="col-sm-4 select mb-2">
                 <label>Método</label>
                 <select name="metodoMetodo" class="form-select" required>
                     <option value="">-- Selecione --</option>
@@ -77,7 +63,7 @@
         <div class="row">
             <div class="col-sm-3 select mb-2">
                 <label>Tipo de Desconto</label>
-                <select name="tipoMetodo" id="tipoMetodo" class="form-select" required>
+                <select name="tipoMetodo" id="tipoMetodo" class="form-select">
                     <option value="">-- Selecione --</option>
                     <option value="1" {{ old('tipoMetodo', $pagamento->TPDesconto ?? '') == '1' ? 'selected' : '' }}>R$ (Valor Fixo)</option>
                     <option value="%" {{ old('tipoMetodo', $pagamento->TPDesconto ?? '') == '%' ? 'selected' : '' }}>% (Porcentagem)</option>

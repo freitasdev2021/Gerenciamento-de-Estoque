@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Cliente;
 use App\Models\Filial;
+use App\Models\Movimentacao;
 use App\Models\Pagamento;
 use App\Models\Produto;
 use App\Models\Venda;
@@ -22,7 +23,7 @@ class VendasController extends Controller
      */
     public function index()
     {
-        $filialId = $_SESSION['login']['filial'] ?? null;
+        $filialId = Auth::user()->IDContrato;
 
         $vendas = self::getListaVendas($filialId);
         $filiais = Filial::orderBy('NMFilial')->get();
@@ -35,7 +36,7 @@ class VendasController extends Controller
      */
     public function create(Request $request)
     {
-        $filialId = Auth::user()->IDContrato;
+        $contratoId = Auth::user()->IDContrato;
         $produtoId = $request->input('produto');
 
         $produto = null;
@@ -43,17 +44,23 @@ class VendasController extends Controller
             $produto = Produto::with('fornecedor')->find($produtoId);
         }
 
+        // Busca as filiais pertencentes às empresas do contrato atual
+        // Relacionamento: filiais.IDEmpresa -> empresas.IDEmpresa -> empresas.IDContrato = $contratoId
+        $filiais = Filial::whereHas('empresa', function ($query) use ($contratoId) {
+            $query->where('IDContrato', $contratoId);
+        })->orderBy('NMFilial')->get();
+
         $clientes = Cliente::whereNull('STDelete')
-            ->where('IDContrato', $filialId)
+            ->where('IDContrato', $contratoId)
             ->orderBy('NMCliente')
             ->get();
 
         $pagamentos = Pagamento::whereNull('STDelete')
-            ->where('IDFilial', $filialId)
+            ->where('IDContrato', $contratoId)
             ->orderBy('NMPagamento')
             ->get();
 
-        return view('vendas.create', compact('produto', 'clientes', 'pagamentos', 'filialId'));
+        return view('vendas.create', compact('produto', 'clientes', 'pagamentos', 'filiais', 'contratoId'));
     }
 
     /**
@@ -63,25 +70,13 @@ class VendasController extends Controller
     {
         $request->validate([
             'IDProduto'         => 'required|integer|exists:produtos,IDProduto',
-            'IDCliente'         => 'required|integer|exists:clientes,IDCliente',
             'IDPagamento'       => 'required|integer|exists:pagamentos,IDPagamento',
             'NUUnidadesVendidas' => 'required|integer|min:1',
+            'IDFilial'           => 'required|integer|exists:filiais,IDFilial',
         ]);
 
-        $filialId = $_SESSION['login']['filial'] ?? null;
+        $filialId = $request->IDFilial;
         $produto = Produto::with('fornecedor')->findOrFail($request->IDProduto);
-
-        // Calcula o valor com promoção
-        $valorComPromocao = PromocoesController::confProdutoPromocional(
-            $produto->IDProduto,
-            $produto->NUValorProduto,
-            $filialId
-        );
-
-        $valorVenda = $valorComPromocao * $request->NUUnidadesVendidas;
-
-        // Aplica desconto do pagamento
-        $valorComDesconto = self::getDescontoPagamento($valorVenda, $request->IDPagamento);
 
         // Obtém o ID da promoção ativa (se houver)
         $idPromocao = $this->getPromocaoAtiva($produto->IDProduto, $filialId);
@@ -93,17 +88,17 @@ class VendasController extends Controller
                 'IDFornecedor'       => $idFornecedor,
                 'IDPromocao'         => $idPromocao,
                 'IDCliente'          => $request->IDCliente,
-                'IDColaborador'      => ContratosController::getColaboradorByUser($_SESSION['login']['dados']['id'] ?? 0),
+                'IDColaborador'      => Auth::user()->id,
                 'NUUnidadesVendidas' => $request->NUUnidadesVendidas,
                 'IDCaixa'            => 0,
                 'IDFilial'           => $filialId,
                 'IDPagamento'        => $request->IDPagamento,
-                'VLVenda'            => $valorComDesconto,
+                'VLVenda'            => 0, // Será recalculado dentro de setVenda
                 'CDVenda'            => '',
                 'IDOrdem'            => '',
             ]);
 
-            return redirect()->route('vendas.index')->with('success', 'Venda realizada com sucesso!');
+            return redirect()->route('produtos.index')->with('success', 'Venda realizada com sucesso!');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Erro ao processar a venda: ' . $e->getMessage())->withInput();
         }
@@ -134,7 +129,7 @@ class VendasController extends Controller
              INNER JOIN promocionais USING(IDPromocao)
              WHERE NOW() >= promocoes.DTInicioPromo
                AND NOW() <= promocoes.DTTerminoPromo
-               AND promocoes.IDFilial = ?
+               AND promocoes.IDContrato = ?
                AND promocionais.IDProduto = ?
              LIMIT 1",
             [$IDFilial, $IDProduto]
@@ -161,7 +156,7 @@ class VendasController extends Controller
         $Acao         = $dados['Acao'];
 
         $venda = DB::select(
-            "SELECT NUCustoProduto, NUEstoqueProduto, IDProduto, VLVenda 
+            "SELECT IDProduto, VLVenda 
              FROM produtos 
              INNER JOIN vendas USING(IDProduto) 
              WHERE IDVenda = ?",
@@ -214,12 +209,10 @@ class VendasController extends Controller
                 NMPromo,
                 NMCliente,
                 NMPdv,
-                DSGarantiaProduto,
                 DTVenda,
                 IDVenda,
                 NUUnidadesVendidas,
                 NMColaborador,
-                NUCustoProduto,
                 QTDesconto,
                 pagamentos.TPDesconto
             FROM vendas
@@ -314,7 +307,8 @@ class VendasController extends Controller
     }
 
     /**
-     * Registra uma venda e decrementa o estoque do produto.
+     * Registra uma venda, insere movimentação e dá baixa no estoque.
+     * Calcula o valor final aplicando desconto de promoção e pagamento.
      *
      * @param  array  $dados  Dados da venda
      * @return \App\Models\Venda
@@ -324,6 +318,25 @@ class VendasController extends Controller
         DB::beginTransaction();
         try {
             $ordi = $dados['IDOrdem'] ?? '';
+
+            // Busca o produto para obter o valor unitário original
+            $produto = Produto::findOrFail($dados['IDProduto']);
+            $valorUnitario = $produto->NUValorProduto;
+
+            // 1. Aplica desconto de promoção (se houver promoção ativa)
+            //    confProdutoPromocional verifica TPDesconto: '%' = percentual, caso contrário = valor fixo
+            $valorComPromocao = PromocoesController::confProdutoPromocional(
+                $dados['IDProduto'],
+                $valorUnitario,
+                Auth::user()->IDContrato
+            );
+
+            // 2. Multiplica o valor unitário (já com promoção) pela quantidade
+            $valorTotal = $valorComPromocao * $dados['NUUnidadesVendidas'];
+
+            // 3. Aplica desconto do método de pagamento
+            //    getDescontoPagamento verifica TPDesconto: 1 = porcentagem, 2 = valor fixo
+            $valorFinal = self::getDescontoPagamento($valorTotal, $dados['IDPagamento']);
 
             $venda = Venda::create([
                 'IDProduto'          => $dados['IDProduto'],
@@ -335,12 +348,22 @@ class VendasController extends Controller
                 'IDCaixa'            => $dados['IDCaixa'],
                 'IDFilial'           => $dados['IDFilial'],
                 'IDPagamento'        => $dados['IDPagamento'],
-                'VLVenda'            => $dados['VLVenda'],
+                'VLVenda'            => $valorFinal,
                 'CDVenda'            => $dados['CDVenda'],
                 'IDOrdem'            => $ordi,
             ]);
 
-            // Estoque removido da tabela produtos - controle agora fica na tabela compras
+            // Insere movimentação de venda (TPMovimentacao = VEN)
+            Movimentacao::create([
+                'IDProduto'       => $dados['IDProduto'],
+                'TPMovimentacao'  => 'VEN',
+                'VLMovimentacao'  => $valorFinal,
+                'QTMovimentacao'  => $dados['NUUnidadesVendidas'],
+            ]);
+
+            // Baixa no estoque: subtrai a quantidade vendida do estoque atual
+            Produto::where('IDProduto', $dados['IDProduto'])
+                ->decrement('QTEstoque', $dados['NUUnidadesVendidas']);
 
             DB::commit();
             return $venda;
@@ -384,7 +407,7 @@ class VendasController extends Controller
         $valorDescontoPromo = PromocoesController::confProdutoPromocional(
             $retorno->produto,
             $descontoPagamento,
-            $_SESSION['login']['filial']
+            Auth::user()->IDContrato
         );
 
         return [
@@ -457,9 +480,9 @@ class VendasController extends Controller
             return $valor;
         }
 
-        if ($pag->TPDesconto == 1) {
+        if ($pag->TPDesconto == "%") {
             $desconto = $valor - ($pag->QTDesconto * $valor) / 100;
-        } elseif ($pag->TPDesconto == 2) {
+        } elseif ($pag->TPDesconto == "R$") {
             $desconto = $valor - $pag->QTDesconto;
         } else {
             $desconto = $valor;

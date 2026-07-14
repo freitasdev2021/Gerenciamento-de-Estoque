@@ -26,7 +26,7 @@ class PromocoesController extends Controller
 
         $promocoes = Promocao::whereNull('STDelete')
             ->when($filialSelecionada, function ($query, $filialSelecionada) {
-                return $query->where('IDFilial', $filialSelecionada);
+                return $query->where('IDContrato', $filialSelecionada);
             })
             ->orderBy('NMPromo')
             ->get();
@@ -57,14 +57,14 @@ class PromocoesController extends Controller
             'fimPromo'      => 'required|date|after_or_equal:inicioPromo',
             'descontoPromo' => 'required|string',
             'tipoPromo'     => 'required|string|in:1,%',
-            'IDFilial'      => 'nullable|integer|exists:filiais,IDFilial',
+            'IDContrato'      => 'nullable|integer|exists:contratos,IDContrato',
         ]);
 
         $NUDescontoPromo = $request->tipoPromo == '%'
             ? intval($request->descontoPromo)
             : $this->decimal($request->descontoPromo);
 
-        $filialId = $request->IDFilial ?: ($_SESSION['login']['filial'] ?? null);
+        $filialId = $request->IDContrato ?: ($_SESSION['login']['filial'] ?? null);
 
         Promocao::create([
             'NMPromo'         => $request->nomePromo,
@@ -72,7 +72,7 @@ class PromocoesController extends Controller
             'DTTerminoPromo'  => $request->fimPromo,
             'NUDescontoPromo' => $NUDescontoPromo,
             'TPDesconto'      => $request->tipoPromo,
-            'IDFilial'        => $filialId,
+            'IDContrato'        => $filialId,
         ]);
 
         return redirect()->route('promocoes.index')->with('success', 'Promoção cadastrada com sucesso!');
@@ -99,7 +99,7 @@ class PromocoesController extends Controller
             'fimPromo'      => 'required|date|after_or_equal:inicioPromo',
             'descontoPromo' => 'required|string',
             'tipoPromo'     => 'required|string|in:1,%',
-            'IDFilial'      => 'nullable|integer|exists:filiais,IDFilial',
+            'IDContrato'      => 'nullable|integer|exists:contratos,IDContrato',
         ]);
 
         $NUDescontoPromo = $request->tipoPromo == '%'
@@ -113,7 +113,7 @@ class PromocoesController extends Controller
             'DTTerminoPromo'  => $request->fimPromo,
             'NUDescontoPromo' => $NUDescontoPromo,
             'TPDesconto'      => $request->tipoPromo,
-            'IDFilial'        => $request->IDFilial ?: $promocao->IDFilial,
+            'IDContrato'        => $request->IDContrato ?: $promocao->IDContrato,
         ]);
 
         return redirect()->route('promocoes.index')->with('success', 'Promoção atualizada com sucesso!');
@@ -181,12 +181,12 @@ class PromocoesController extends Controller
     /**
      * Retorna a lista de promoções ativas de uma filial.
      *
-     * @param  int  $IDFilial
+     * @param  int  $IDContrato
      * @return \Illuminate\Database\Eloquent\Collection
      */
-    public static function listarPromocoes($IDFilial)
+    public static function listarPromocoes($IDContrato)
     {
-        return Promocao::where('IDFilial', $IDFilial)
+        return Promocao::where('IDContrato', $IDContrato)
             ->whereNull('STDelete')
             ->get();
     }
@@ -266,7 +266,7 @@ class PromocoesController extends Controller
                 'DTTerminoPromo'  => $dados['fimPromo'],
                 'NUDescontoPromo' => $NUDescontoPromo,
                 'TPDesconto'      => $dados['tipoPromo'],
-                'IDFilial'        => $_SESSION['login']['filial'],
+                'IDContrato'        => $_SESSION['login']['filial'],
             ]);
         }
 
@@ -298,7 +298,7 @@ class PromocoesController extends Controller
             WHERE IDProduto NOT IN (
                 SELECT IDProduto FROM promocionais WHERE IDPromocao != ?
             ) 
-            AND fornecedores.IDFilial = ?
+            AND fornecedores.IDContrato = ?
         ";
 
         return DB::select($SQL, [$IDPromocao, $IDPromocao, $filialId]);
@@ -334,10 +334,10 @@ class PromocoesController extends Controller
      *
      * @param  int    $IDProduto
      * @param  float  $valorProduto
-     * @param  int    $IDFilial
+     * @param  int    $IDContrato
      * @return float  Valor com desconto aplicado (ou valor original se não houver promoção)
      */
-    public static function confProdutoPromocional($IDProduto, $valorProduto, $IDFilial)
+    public static function confProdutoPromocional($IDProduto, $valorProduto, $IDContrato)
     {
         $SQL = "
             SELECT
@@ -352,12 +352,12 @@ class PromocoesController extends Controller
             WHERE
                 NOW() >= promocoes.DTInicioPromo 
                 AND NOW() <= promocoes.DTTerminoPromo
-                AND promocoes.IDFilial = ?
+                AND promocoes.IDContrato = ?
                 AND promocionais.IDProduto = ?
             GROUP BY promocoes.IDPromocao
         ";
 
-        $result = DB::select($SQL, [$IDFilial, $IDProduto]);
+        $result = DB::select($SQL, [$IDContrato, $IDProduto]);
 
         if (count($result) > 0) {
             $desc = $result[0];

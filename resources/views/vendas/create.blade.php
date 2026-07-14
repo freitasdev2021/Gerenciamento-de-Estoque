@@ -38,8 +38,25 @@
 
         <div class="row">
             <div class="col-sm-6 select mb-2">
+                <label>Filial</label>
+                <select name="IDFilial" class="form-select" required>
+                    <option value="">-- Selecione a Filial --</option>
+                    @foreach($filiais as $f)
+                        <option value="{{ $f->IDFilial }}" {{ old('IDFilial') == $f->IDFilial ? 'selected' : '' }}>
+                            {{ $f->NMFilial }}
+                        </option>
+                    @endforeach
+                </select>
+                @error('IDFilial')
+                    <div class="text-danger">{{ $message }}</div>
+                @enderror
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-6 select mb-2">
                 <label>Cliente (Não Obrigatório)</label>
-                <select name="IDCliente" class="form-select" required>
+                <select name="IDCliente" class="form-select">
                     <option value="">-- Identifique um Cliente --</option>
                     @foreach($clientes as $c)
                         <option value="{{ $c->IDCliente }}" {{ old('IDCliente') == $c->IDCliente ? 'selected' : '' }}>

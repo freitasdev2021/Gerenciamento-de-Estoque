@@ -7,6 +7,7 @@ use App\Models\Pagamento;
 use App\Models\Venda;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class PagamentosController extends Controller
 {
@@ -20,11 +21,11 @@ class PagamentosController extends Controller
      */
     public function index(Request $request)
     {
-        $filialSelecionada = $request->input('filial', $_SESSION['login']['filial'] ?? null);
+        $filialSelecionada = Auth::user()->IDContrato;
 
         $pagamentos = Pagamento::whereNull('STDelete')
             ->when($filialSelecionada, function ($query, $filialSelecionada) {
-                return $query->where('IDFilial', $filialSelecionada);
+                return $query->where('IDContrato', $filialSelecionada);
             })
             ->orderBy('NMPagamento')
             ->get();
@@ -63,7 +64,7 @@ class PagamentosController extends Controller
             ? intval($request->descontoMetodo)
             : $this->decimal($request->descontoMetodo);
 
-        $filialId = $request->IDFilial ?: ($_SESSION['login']['filial'] ?? null);
+        $filialId = Auth::user()->IDContrato;
 
         Pagamento::create([
             'NMPagamento' => $request->nomeMetodo,
@@ -72,7 +73,7 @@ class PagamentosController extends Controller
             'QTParcelas'  => $request->parcelasMetodo,
             'TPDesconto'  => $request->tipoMetodo,
             'NUJuros'     => $request->jurosMetodo ?? 0,
-            'IDFilial'    => $filialId,
+            'IDContrato'    => $filialId,
         ]);
 
         return redirect()->route('pagamentos.index')->with('success', 'Pagamento cadastrado com sucesso!');
@@ -292,7 +293,7 @@ class PagamentosController extends Controller
                 'DSMetodo'    => $dados['metodoMetodo'],
                 'QTParcelas'  => $dados['parcelasMetodo'],
                 'TPDesconto'  => $dados['tipoMetodo'],
-                'IDFilial'    => $_SESSION['login']['filial'],
+                'IDContrato'    => Auth::user()->IDContrato,
                 'NUJuros'     => $dados['jurosMetodo'],
             ]);
         }

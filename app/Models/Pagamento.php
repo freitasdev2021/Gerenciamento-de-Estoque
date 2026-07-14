@@ -19,7 +19,7 @@ class Pagamento extends Model
         'DSMetodo',
         'QTParcelas',
         'TPDesconto',
-        'IDFilial',
+        'IDContrato',
         'NUJuros',
         'STDelete',
     ];
