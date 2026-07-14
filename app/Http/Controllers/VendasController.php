@@ -41,8 +41,29 @@ class VendasController extends Controller
         $produtoId = $request->input('produto');
 
         $produto = null;
+        $vendasDoProduto = collect();
+
         if ($produtoId) {
             $produto = Produto::with('fornecedor')->find($produtoId);
+
+            // Busca as vendas ativas deste produto
+            $vendasDoProduto = DB::select(
+                "SELECT
+                    v.IDVenda,
+                    v.DTVenda,
+                    v.NUUnidadesVendidas,
+                    v.VLVenda,
+                    c.NMCliente,
+                    p.NMPagamento,
+                    col.NMColaborador
+                FROM vendas v
+                INNER JOIN pagamentos p ON p.IDPagamento = v.IDPagamento
+                LEFT JOIN clientes c ON c.IDCliente = v.IDCliente
+                LEFT JOIN colaboradores col ON col.IDColaborador = v.IDColaborador
+                WHERE v.IDProduto = ?
+                ORDER BY v.DTVenda DESC",
+                [$produtoId]
+            );
         }
 
         // Busca as filiais pertencentes às empresas do contrato atual
@@ -61,7 +82,7 @@ class VendasController extends Controller
             ->orderBy('NMPagamento')
             ->get();
 
-        return view('vendas.create', compact('produto', 'clientes', 'pagamentos', 'filiais', 'contratoId'));
+        return view('vendas.create', compact('produto', 'clientes', 'pagamentos', 'filiais', 'contratoId', 'vendasDoProduto'));
     }
 
     /**
@@ -116,13 +137,20 @@ class VendasController extends Controller
     }
 
     /**
-     * Cancel a sale.
+     * Cancel a sale (restore stock and mark as canceled).
      */
     public function destroy($id)
     {
-        Venda::where('IDVenda', $id)->update(['STVenda' => 0]);
+        $venda = Venda::findOrFail($id);
 
-        return redirect()->route('vendas.index')->with('success', 'Venda cancelada com sucesso!');
+        // Restore stock
+        Produto::where('IDProduto', $venda->IDProduto)
+            ->increment('QTEstoque', $venda->NUUnidadesVendidas);
+
+        // Mark sale as canceled
+        $venda->delete();
+
+        return redirect()->back()->with('success', 'Venda #' . $id . ' cancelada com sucesso!');
     }
 
     // ============================
@@ -183,7 +211,7 @@ class VendasController extends Controller
 
         if ($QTDevolucao == $Vendas) {
             Venda::where('IDVenda', $IDVenda)
-                ->update(['STVenda' => 0]);
+                ->delete();
 
             if ($Acao == "Repor") {
                 Produto::where('IDProduto', $produto->IDProduto)
@@ -235,7 +263,7 @@ class VendasController extends Controller
             LEFT JOIN colaboradores ON(colaboradores.IDColaborador = vendas.IDColaborador)
             LEFT JOIN fornecedores ON(fornecedores.IDFornecedor = produtos.IDFornecedor)
             LEFT JOIN filiais ON(filiais.IDFilial = fornecedores.IDFilial)
-            WHERE STInsumo = 0 AND filiais.IDFilial = ? AND STVenda = 1
+            WHERE STInsumo = 0 AND filiais.IDFilial = ?
             ORDER BY DTVenda DESC",
             [$IDFilial]
         );
@@ -401,7 +429,7 @@ class VendasController extends Controller
                 CASE WHEN vendas.IDPagamento IS NOT NULL THEN vendas.IDPagamento ELSE 0 END as pagamento
             FROM produtos 
             LEFT JOIN vendas USING(IDProduto) 
-            WHERE IDProduto = ? AND STVenda = 1",
+            WHERE IDProduto = ?",
             [$IDProduto]
         );
 
