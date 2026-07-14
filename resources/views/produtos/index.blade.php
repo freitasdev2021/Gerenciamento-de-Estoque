@@ -13,12 +13,11 @@ use App\Http\Controllers\geralController;
         <thead>
             <tr>
                 <th>Nome</th>
-                <th>Estoque</th>
+                <th>Categoria</th>
+                <th>Fornecedor</th>
                 <th>Vencimento</th>
                 <th>Valor</th>
-                <th>Descrição</th>
                 <th>SKU</th>
-                <th>Cadastro</th>
                 <th>Opções</th>
             </tr>
         </thead>
@@ -26,12 +25,11 @@ use App\Http\Controllers\geralController;
             @foreach($produtos as $p)
             <tr>
                 <td>{{ $p->NMProduto }}</td>
-                <td>{{ $p->NUEstoqueProduto }}</td>
-                <td>{{ ($p->DTVencimento == '0000-00-00 00:00:00' ? 'Não Tem' : geralController::data($p->DTVencimento, 'd/m/Y')) }}</td>
+                <td>{{ $p->categoria->DSCategoria ?? 'N/D' }}</td>
+                <td>{{ $p->fornecedor->NMFornecedor ?? 'N/D' }}</td>
+                <td>{{ ($p->DTValidadeProduto ? \Carbon\Carbon::parse($p->DTValidadeProduto)->format('d/m/Y') : 'Não Tem') }}</td>
                 <td>{{ geralController::trataValor($p->NUValorProduto, 0) }}</td>
-                <td>{{ $p->DSProduto }}</td>
-                <td>{{ $p->SKUProduto }}</td>
-                <td>{{ geralController::data($p->DTCadastro, 'd/m/Y H:i') }}</td>
+                <td>{{ $p->DSCodigoProduto }}</td>
                 <td>
                     <form action="{{ route('produtos.destroy', $p->IDProduto) }}" method="POST" style="display:inline;" onsubmit="return confirm('Deseja Excluir Esse Produto?')">
                         @csrf

@@ -9,6 +9,7 @@ use App\Models\Produto;
 use App\Models\Venda;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class VendasController extends Controller
 {
@@ -34,7 +35,7 @@ class VendasController extends Controller
      */
     public function create(Request $request)
     {
-        $filialId = $_SESSION['login']['filial'] ?? 1;
+        $filialId = Auth::user()->IDContrato;
         $produtoId = $request->input('produto');
 
         $produto = null;
@@ -43,7 +44,7 @@ class VendasController extends Controller
         }
 
         $clientes = Cliente::whereNull('STDelete')
-            ->where('IDFilial', $filialId)
+            ->where('IDContrato', $filialId)
             ->orderBy('NMCliente')
             ->get();
 
@@ -69,11 +70,6 @@ class VendasController extends Controller
 
         $filialId = $_SESSION['login']['filial'] ?? null;
         $produto = Produto::with('fornecedor')->findOrFail($request->IDProduto);
-
-        // Verifica estoque
-        if ($produto->NUEstoqueProduto < $request->NUUnidadesVendidas) {
-            return redirect()->back()->with('error', 'Estoque insuficiente! Disponível: ' . $produto->NUEstoqueProduto)->withInput();
-        }
 
         // Calcula o valor com promoção
         $valorComPromocao = PromocoesController::confProdutoPromocional(
@@ -344,8 +340,7 @@ class VendasController extends Controller
                 'IDOrdem'            => $ordi,
             ]);
 
-            Produto::where('IDProduto', $dados['IDProduto'])
-                ->decrement('NUEstoqueProduto', $dados['NUUnidadesVendidas']);
+            // Estoque removido da tabela produtos - controle agora fica na tabela compras
 
             DB::commit();
             return $venda;

@@ -21,6 +21,7 @@ use App\Http\Controllers\geralController;
                     <option value="">Selecione</option>
                     <option value="VEN">Venda</option>
                     <option value="REP">Reposição</option>
+                    <option value="PER">Perda</option>
                 </select>
                 <div class="error-input text-danger">
                 Preenchimento incorreto!

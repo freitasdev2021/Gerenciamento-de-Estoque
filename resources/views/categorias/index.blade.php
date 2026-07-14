@@ -14,7 +14,7 @@ use App\Http\Controllers\geralController;
             <tr>
                 <th>Nome</th>
                 <th>Estoque</th>
-                <th>Valor Total</th>
+                <th>Valor Total Para Venda</th>
                 <th>Opções</th>
             </tr>
         </thead>
@@ -23,7 +23,7 @@ use App\Http\Controllers\geralController;
             <tr>
                 <td>{{ $cat->DSCategoria }}</td>
                 <td>{{ $cat->QTEstoque }}</td>
-                <td>{{ geralController::trataValor($cat->VLInvestido, 0) }}</td>
+                <td>{{ geralController::trataValor($cat->QTEstoque * $cat->VLInvestido, 0) }}</td>
                 <td>
                     <form action="{{ route('categorias.destroy', $cat->IDCategoria) }}" method="POST" style="display:inline;" onsubmit="return confirm('Deseja Excluir Essa Categoria?')">
                         @csrf

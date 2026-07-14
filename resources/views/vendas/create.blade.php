@@ -18,9 +18,8 @@
                     <option value="">-- Selecione um Produto --</option>
                     @if($produto)
                         <option value="{{ $produto->IDProduto }}" selected>
-                            {{ $produto->NMProduto }} 
-                            (Estoque: {{ $produto->NUEstoqueProduto }} | 
-                            R$ {{ number_format($produto->NUValorProduto, 2, ',', '.') }})
+                            {{ $produto->NMProduto }} | 
+                            R$ {{ number_format($produto->NUValorProduto, 2, ',', '.') }}
                         </option>
                     @endif
                 </select>
@@ -39,9 +38,9 @@
 
         <div class="row">
             <div class="col-sm-6 select mb-2">
-                <label>Cliente</label>
+                <label>Cliente (Não Obrigatório)</label>
                 <select name="IDCliente" class="form-select" required>
-                    <option value="">-- Selecione um Cliente --</option>
+                    <option value="">-- Identifique um Cliente --</option>
                     @foreach($clientes as $c)
                         <option value="{{ $c->IDCliente }}" {{ old('IDCliente') == $c->IDCliente ? 'selected' : '' }}>
                             {{ $c->NMCliente }}

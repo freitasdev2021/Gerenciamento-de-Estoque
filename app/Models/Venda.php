@@ -15,18 +15,11 @@ class Venda extends Model
 
     protected $fillable = [
         'IDProduto',
-        'IDFornecedor',
-        'IDPromocao',
         'IDCliente',
         'IDColaborador',
         'NUUnidadesVendidas',
-        'IDCaixa',
-        'IDFilial',
-        'STVenda',
         'DTVenda',
         'IDPagamento',
-        'VLVenda',
-        'CDVenda',
-        'IDOrdem',
+        'VLVenda'
     ];
 }

@@ -47,8 +47,7 @@ class ClientesController extends Controller
     public function create()
     {
         $cliente = null;
-        $filiais = Filial::orderBy('NMFilial')->get();
-        return view('clientes.create', compact('cliente', 'filiais'));
+        return view('clientes.create', compact('cliente'));
     }
 
     /**
@@ -84,8 +83,6 @@ class ClientesController extends Controller
     public function edit($id)
     {
         $cliente  = Cliente::findOrFail($id);
-        $filiais  = Filial::orderBy('NMFilial')->get();
-        $servicos = self::getServicosCliente($id);
         $compras  = self::getCompras($id);
 
         // Busca as vendas de produtos do cliente (para o card "Produtos Comprados")
@@ -100,12 +97,12 @@ class ClientesController extends Controller
              FROM vendas v
              INNER JOIN produtos p ON p.IDProduto = v.IDProduto
              INNER JOIN pagamentos pag ON pag.IDPagamento = v.IDPagamento
-             WHERE v.IDCliente = ? AND v.STVenda = 1 AND p.STInsumo = 0
+             WHERE v.IDCliente = ? AND v.STVenda = 1
              ORDER BY v.DTVenda DESC",
             [$id]
         );
 
-        return view('clientes.create', compact('cliente', 'filiais', 'servicos', 'compras', 'produtosComprados'));
+        return view('clientes.create', compact('cliente', 'compras', 'produtosComprados'));
     }
 
     /**
@@ -157,65 +154,6 @@ class ClientesController extends Controller
     // ================================
     // MÉTODOS ESTÁTICOS (COMPATIBILIDADE)
     // ================================
-
-    /**
-     * Retorna os serviços de um cliente com todos os detalhes relacionados.
-     *
-     * @param  int  $ID  ID do Cliente
-     * @return array
-     */
-    public static function getServicosCliente($ID)
-    {
-        $SQL = <<<SQL
-            SELECT 
-                e.NMRazaoEmpresa as empresa,
-                f.DSEnderecoJSON as endereco,
-                c.NMCliente as cliente,
-                f.NMFilial as filial,
-                s.DSTipoServico as servico,
-                os.DSOrdemServico as previa,
-                os.DSServico as descricao,
-                col.NMColaborador as atendente,
-                os.IDOrdem as codigo,
-                os.DTSaida saida,
-                os.DSNota mensagem,
-                os.DTServico as dataHora,
-                pag.QTParcelas as parcelas,
-                pag.NUJuros as juros,
-                pag.DSMetodo as metodo,
-                (SELECT
-                    CONCAT('[',
-                        GROUP_CONCAT(
-                        '{'
-                        ,'"produto":"',prod.NMProduto,'"'
-                        ,',"valor":"',prod.NUValorProduto,'"'
-                        ,',"quantidade":"',custos.NUQuantidade,'"'
-                        ,',"id":"',prod.IDProduto,'"'
-                        ,'}' 
-                    SEPARATOR ','),
-                ']')
-                FROM custosordem custos 
-                INNER JOIN produtos prod USING(IDProduto) 
-                LEFT JOIN promocionais k USING(IDProduto) 
-                LEFT JOIN promocoes y USING(IDPromocao) 
-                WHERE custos.IDOrdem = os.IDOrdem ) as maodeobra,
-                e.NUCnpjEmpresa as cnpj,
-                s.VLBase as mobra,
-                pag.IDPagamento as id_pagamento
-            FROM empresas e
-            LEFT JOIN filiais f USING(IDEmpresa)
-            LEFT JOIN clientes c USING(IDFilial)
-            LEFT JOIN ordemservico os USING(IDCliente)
-            LEFT JOIN colaboradores as col USING(IDColaborador)
-            LEFT JOIN servicos s USING(IDServico)
-            LEFT JOIN custosordem cst USING(IDOrdem)
-            LEFT JOIN produtos prv USING(IDProduto)
-            LEFT JOIN pagamentos pag USING(IDPagamento)
-            WHERE os.IDCliente = ? AND os.STServico = 1
-        SQL;
-
-        return DB::select($SQL, [$ID]);
-    }
 
     /**
      * Sincroniza/Cria um cliente baseado no CPF.

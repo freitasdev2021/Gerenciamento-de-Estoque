@@ -16,7 +16,7 @@ class CategoriasController extends Controller
     public function index()
     {
         return view('categorias.index', [
-            'categorias' => DB::select("SELECT categorias.IDCategoria, DSCategoria, CASE WHEN NUValorProduto IS NULL THEN 0 ELSE SUM(NUValorProduto) END as VLInvestido, SUM(produtos.NUEstoqueProduto) as QTEstoque FROM categorias LEFT JOIN produtos ON(categorias.IDCategoria = produtos.IDCategoria) GROUP BY categorias.IDCategoria")
+            'categorias' => DB::select("SELECT categorias.IDCategoria, DSCategoria, CASE WHEN NUValorProduto IS NULL THEN 0 ELSE SUM(NUValorProduto) END as VLInvestido, produtos.QTEstoque FROM categorias LEFT JOIN produtos ON(categorias.IDCategoria = produtos.IDCategoria) GROUP BY categorias.IDCategoria")
         ]);
     }
 

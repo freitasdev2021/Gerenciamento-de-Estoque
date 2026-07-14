@@ -52,11 +52,11 @@
                     <a class="list-group-item list-group-item-action {{ (Route::currentRouteName() && str_contains(Route::currentRouteName(), 'pagamentos')) ? 'active' : '' }}" href="{{route('pagamentos.index')}}">
                         <i class="fa-solid fa-credit-card"></i><span>Pagamentos</span>
                     </a>
+                    <a class="list-group-item list-group-item-action {{ (Route::currentRouteName() && str_contains(Route::currentRouteName(), 'reposicoes')) ? 'active' : '' }}" href="{{route('reposicoes.index')}}">
+                        <i class="fa-solid fa-boxes-stacked"></i><span>Reposições</span>
+                    </a>
                     <a class="list-group-item list-group-item-action {{ (Route::currentRouteName() && str_contains(Route::currentRouteName(), 'promocoes')) ? 'active' : '' }}" href="{{route('promocoes.index')}}">
                         <i class="fa-solid fa-tag"></i><span>Promoções</span>
-                    </a>
-                    <a class="list-group-item list-group-item-action {{ (Route::currentRouteName() && str_contains(Route::currentRouteName(), 'vendas')) ? 'active' : '' }}" href="{{route('vendas.index')}}">
-                        <i class="fa-solid fa-cart-shopping"></i><span>Vendas</span>
                     </a>
                     <a class="list-group-item list-group-item-action {{ (Route::currentRouteName() && str_contains(Route::currentRouteName(), 'movimentacoes')) ? 'active' : '' }}" href="{{route('movimentacoes.index')}}">
                         <i class="fa-solid fa-box"></i><span>Estoque</span>

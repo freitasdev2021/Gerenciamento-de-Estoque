@@ -17,21 +17,13 @@ class Produto extends Model
         'IDFornecedor',
         'IDCategoria',
         'NMProduto',
-        'NUEstoqueProduto',
         'NUEstoqueMinimo',
         'DSUnidadeProduto',
-        'DTEntradaProduto',
         'DTValidadeProduto',
-        'NUCustoProduto',
         'NUValorProduto',
         'DSImagemProduto',
         'DSCodigoProduto',
-        'NULucroProduto',
-        'DSGarantiaProduto',
-        'STInsumo',
-        'TPIdentificacao',
-        'STDelete',
-        'NUCustoTotal',
+        'QTEstoque'
     ];
 
     /**

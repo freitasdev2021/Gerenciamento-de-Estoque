@@ -8,6 +8,7 @@ use App\Http\Controllers\ClientesController;
 use App\Http\Controllers\FornecedoresController;
 use App\Http\Controllers\PagamentosController;
 use App\Http\Controllers\PromocoesController;
+use App\Http\Controllers\ReposicoesController;
 use App\Http\Controllers\VendasController;
 use Illuminate\Support\Facades\Route;
 
@@ -86,6 +87,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/promocoes/{id}/vincular', [PromocoesController::class, 'vincular'])->name('promocoes.vincular');
     Route::post('/promocoes/{id}/vincular', [PromocoesController::class, 'setVinculos'])->name('promocoes.setVinculos');
 
+    // REPOSIÇÕES
+    Route::get('/reposicoes', [ReposicoesController::class, 'index'])->name('reposicoes.index');
+    Route::get('/reposicoes/create', [ReposicoesController::class, 'create'])->name('reposicoes.create');
+    Route::post('/reposicoes', [ReposicoesController::class, 'store'])->name('reposicoes.store');
+    
     // VENDAS
     Route::get('/vendas', [VendasController::class, 'index'])->name('vendas.index');
     Route::get('/vendas/create', [VendasController::class, 'create'])->name('vendas.create');

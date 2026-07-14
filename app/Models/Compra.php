@@ -17,5 +17,6 @@ class Compra extends Model
         'IDProduto',
         'QTCompra',
         'DTReposicao',
+        'VLUnitario'
     ];
 }

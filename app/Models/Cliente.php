@@ -18,17 +18,16 @@ class Cliente extends Model
         'NMEmailCliente',
         'NUTelefoneCliente',
         'NUCpfCliente',
-        'IDFilial',
-        'DSEnderecoJSON',
+        'IDContrato',
         'STDelete',
     ];
 
     /**
      * Relacionamento com a Filial.
      */
-    public function filial()
+    public function contratos()
     {
-        return $this->belongsTo(Filial::class, 'IDFilial', 'IDFilial');
+        return $this->belongsTo(Filial::class, 'IDContrato', 'IDContrato');
     }
 
     /**

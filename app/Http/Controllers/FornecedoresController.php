@@ -143,12 +143,10 @@ class FornecedoresController extends Controller
      */
     public function destroy($id)
     {
-        $temProdutosEmEstoque = Produto::where('IDFornecedor', $id)
-            ->where('NUEstoqueProduto', '>', 0)
-            ->exists();
+        $temProdutos = Produto::where('IDFornecedor', $id)->exists();
 
-        if ($temProdutosEmEstoque) {
-            return redirect()->back()->with('error', 'Você não pode excluir esse fornecedor, pois nele há produtos em estoque.');
+        if ($temProdutos) {
+            return redirect()->back()->with('error', 'Você não pode excluir esse fornecedor, pois nele há produtos vinculados.');
         }
 
         $temVendas = Venda::where('IDFornecedor', $id)->exists();
@@ -191,13 +189,11 @@ class FornecedoresController extends Controller
      */
     public static function excluirFornecedor($ID, $confirmacao)
     {
-        $temProdutosEmEstoque = Produto::where('IDFornecedor', $ID)
-            ->where('NUEstoqueProduto', '>', 0)
-            ->exists();
+        $temProdutos = Produto::where('IDFornecedor', $ID)->exists();
 
-        if ($temProdutosEmEstoque) {
+        if ($temProdutos) {
             $retorno['erro']     = true;
-            $retorno['mensagem'] = "Você não pode excluir esse fornecedor, pois nele há produtos em estoque.";
+            $retorno['mensagem'] = "Você não pode excluir esse fornecedor, pois nele há produtos vinculados.";
             return json_encode($retorno);
         }
 
