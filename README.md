@@ -1,1 +1,1 @@
-Sistema Básico de Gerenciamento de Estoque da Empresa W2O Softwares e Aplicativos
+Software de Controle de Estoque Feito em Laravel 10
