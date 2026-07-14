@@ -97,7 +97,7 @@ class ClientesController extends Controller
              FROM vendas v
              INNER JOIN produtos p ON p.IDProduto = v.IDProduto
              INNER JOIN pagamentos pag ON pag.IDPagamento = v.IDPagamento
-             WHERE v.IDCliente = ? AND v.STVenda = 1
+             WHERE v.IDCliente = ?
              ORDER BY v.DTVenda DESC",
             [$id]
         );

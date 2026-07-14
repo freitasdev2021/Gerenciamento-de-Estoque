@@ -92,6 +92,9 @@ class ReposicoesController extends Controller
                 'VLUnitario'  => $request->VLUnitario ?? $produto->NUValorProduto,
             ]);
 
+            // Incrementa o estoque do produto com a quantidade comprada
+            $produto->increment('QTEstoque', $request->QTCompra);
+
             DB::commit();
 
             return redirect()->route('reposicoes.index')->with('success', 'Reposição registrada com sucesso!');

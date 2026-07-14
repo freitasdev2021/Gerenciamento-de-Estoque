@@ -20,7 +20,8 @@ class Venda extends Model
         'NUUnidadesVendidas',
         'DTVenda',
         'IDPagamento',
-        'VLVenda'
+        'VLVenda',
+        'IDFilial'
     ];
 
     /**

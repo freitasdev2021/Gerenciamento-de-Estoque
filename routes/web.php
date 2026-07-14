@@ -10,6 +10,7 @@ use App\Http\Controllers\PagamentosController;
 use App\Http\Controllers\PromocoesController;
 use App\Http\Controllers\ReposicoesController;
 use App\Http\Controllers\CuponsController;
+use App\Http\Controllers\RelatoriosController;
 use App\Http\Controllers\VendasController;
 use Illuminate\Support\Facades\Route;
 
@@ -103,8 +104,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/cupons/{vendaId}/cupom', [CuponsController::class, 'imprimirCupom'])->name('cupons.imprimir');
 
     // RELATÓRIOS
-    Route::get('/relatorios', [MovimentacoesController::class, 'indexRel'])->name('relatorios.index');
-    Route::post('/relatorios/graficos', [MovimentacoesController::class, 'getRelatorio'])->name('relatorios.graficos');
+    Route::get('/relatorios', [RelatoriosController::class, 'index'])->name('relatorios.index');
+    Route::get('/relatorios/curva-abc/data', [RelatoriosController::class, 'curvaAbcData'])->name('relatorios.curvaAbc');
+    Route::get('/relatorios/classes', [RelatoriosController::class, 'getClassesProdutos'])->name('relatorios.classes');
 });
 
 require __DIR__.'/auth.php';
