@@ -11,6 +11,7 @@ use App\Models\Venda;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use App\Services\NFService;
 
 class VendasController extends Controller
 {
@@ -83,7 +84,7 @@ class VendasController extends Controller
         $idFornecedor = $produto->fornecedor->IDFornecedor ?? 0;
 
         try {
-            self::setVenda([
+            $venda = self::setVenda([
                 'IDProduto'          => $produto->IDProduto,
                 'IDFornecedor'       => $idFornecedor,
                 'IDPromocao'         => $idPromocao,
@@ -98,7 +99,17 @@ class VendasController extends Controller
                 'IDOrdem'            => '',
             ]);
 
-            return redirect()->route('produtos.index')->with('success', 'Venda realizada com sucesso!');
+            // Gera a NF-e (ambiente de homologação)
+            $NFService = new NFService();
+            $resultado = $NFService->gerarNfeParaVenda($venda);
+
+            if ($resultado['sucesso']) {
+                return redirect()->route('cupons.imprimir', $venda->IDVenda)
+                    ->with('success', 'Venda realizada com sucesso!');
+            } else {
+                return redirect()->route('cupons.imprimir', $venda->IDVenda)
+                    ->with('warning', 'Venda realizada, mas a NF-e falhou: ' . $resultado['mensagem']);
+            }
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Erro ao processar a venda: ' . $e->getMessage())->withInput();
         }

@@ -9,6 +9,7 @@ use App\Http\Controllers\FornecedoresController;
 use App\Http\Controllers\PagamentosController;
 use App\Http\Controllers\PromocoesController;
 use App\Http\Controllers\ReposicoesController;
+use App\Http\Controllers\CuponsController;
 use App\Http\Controllers\VendasController;
 use Illuminate\Support\Facades\Route;
 
@@ -97,6 +98,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/vendas/create', [VendasController::class, 'create'])->name('vendas.create');
     Route::post('/vendas', [VendasController::class, 'store'])->name('vendas.store');
     Route::delete('/vendas/{id}', [VendasController::class, 'destroy'])->name('vendas.destroy');
+
+    // CUPOM
+    Route::get('/cupons/{vendaId}/cupom', [CuponsController::class, 'imprimirCupom'])->name('cupons.imprimir');
 
     // RELATÓRIOS
     Route::get('/relatorios', [MovimentacoesController::class, 'indexRel'])->name('relatorios.index');

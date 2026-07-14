@@ -35,6 +35,9 @@ use App\Http\Controllers\geralController;
                 <td>{{ $v->NMPromo ?? '--' }}</td>
                 <td>{{ \Carbon\Carbon::parse($v->DTVenda)->format('d/m/Y H:i') }}</td>
                 <td>
+                    <a href="{{ route('cupons.imprimir', $v->IDVenda) }}" class="btn btn-info" target="_blank" title="Imprimir Cupom">
+                        <i class="fa-solid fa-print"></i>
+                    </a>
                     <form action="{{ route('vendas.destroy', $v->IDVenda) }}" method="POST" style="display:inline;" onsubmit="return confirm('Deseja cancelar esta venda?')">
                         @csrf
                         @method('DELETE')

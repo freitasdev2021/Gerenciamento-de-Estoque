@@ -3,26 +3,30 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cupom;
-use Illuminate\Http\Request;
+use App\Models\Venda;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 
 class CuponsController extends Controller
 {
-    /**
-     * Sincroniza/Insere um cupom (usado por sistemas externos).
-     *
-     * @param  array  $dados  Dados do cupom (IDCaixa, ANCupom, CDVenda, IDCliente, IDFilial)
-     * @return \App\Models\Cupom
-     */
-    public static function sincronizaCupons($dados)
+   
+    public function imprimirCupom($vendaId)
     {
-        return Cupom::create([
-            'IDCaixa'   => $dados['IDCaixa'],
-            'ANCupom'   => $dados['ANCupom'],
-            'CDVenda'   => $dados['CDVenda'],
-            'IDCliente' => $dados['IDCliente'],
-            'IDFilial'  => $dados['IDFilial'],
-        ]);
+        // 1. Busca os dados da venda com os relacionamentos necessários
+        $venda = Venda::with(['produto', 'cliente', 'colaborador.filial', 'pagamento'])
+                      ->findOrFail($vendaId);
+
+        // 2. Define o tamanho do papel personalizado em Pontos (pt)
+        // 80mm de largura = 226.77pt
+        $largura = 226.77;
+        $altura = 841.89;
+
+        // 3. Renderiza a view passando os dados
+        $pdf = Pdf::loadView('pdf.cupom', compact('venda'))
+                ->setPaper([0, 0, $largura, $altura]);
+
+        // 4. Retorna o PDF diretamente no navegador (stream) para impressão/download
+        return $pdf->stream("cupom-venda-{$venda->IDVenda}.pdf");
     }
 
     /**
